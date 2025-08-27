@@ -1,4 +1,4 @@
-import { Room, Role, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom, Permission, ExamConfiguration } from './types';
+import { Room, Role, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom, Permission, ExamConfiguration, ReportTemplate } from './types';
 import { ClipboardListIcon } from './components/icons/ClipboardListIcon';
 import { CalendarDaysIcon } from './components/icons/CalendarDaysIcon';
 import { UsersIcon } from './components/icons/UsersIcon';
@@ -40,44 +40,78 @@ export const INITIAL_EXAM_CONFIGURATIONS: ExamConfiguration[] = [
     {
         id: 'exam_scinti_osseuse',
         name: 'Scintigraphie Osseuse',
-        fields: [
-            { id: 'f_indic', label: 'Indications', type: 'checkbox', options: ["Bilan d'extension initial", "Bilan de récidive", "Bilan comparatif", "Évaluation"] },
-            { id: 'f_indic_autres', label: 'Autres indications', type: 'textarea' },
-            { id: 'f_atcd', label: 'Antécédents médicaux', type: 'textarea' },
-            { id: 'f_hist_maladie', label: 'Histoire de la maladie', type: 'textarea' },
-        ],
+        fields: {
+            request: [
+                { id: 'f_indic', label: 'Indications', type: 'checkbox', options: ["Bilan d'extension initial", "Bilan de récidive", "Bilan comparatif", "Évaluation"] },
+                { id: 'f_indic_autres', label: 'Autres indications', type: 'textarea' },
+                { id: 'f_atcd', label: 'Antécédents médicaux', type: 'textarea' },
+                { id: 'f_hist_maladie', label: 'Histoire de la maladie', type: 'textarea' },
+            ],
+            consultation: [
+                 { id: 'f_cons_poids', label: 'Poids (kg)', type: 'text' },
+                 { id: 'f_cons_taille', label: 'Taille (cm)', type: 'text' },
+                 { id: 'f_cons_atcd_msk', label: 'Antécédents MSK pertinents', type: 'textarea' },
+            ],
+            report: [
+                 { id: 'f_cr_technique', label: 'Technique et Activité', type: 'text' },
+                 { id: 'f_cr_motif', label: 'Motif de l\'examen', type: 'textarea' },
+            ]
+        },
     },
     {
         id: 'exam_scinti_parathyroid',
         name: 'Scintigraphie Parathyroïdienne',
-        fields: [
-            { id: 'f_indic_para', label: 'Indications', type: 'checkbox', options: ['Hyperparathyroïdie primaire', 'Persistance / Récidive post-op'] },
-            { id: 'f_atcd_para', label: 'Antécédents chirurgicaux (cervicale)', type: 'textarea' },
-        ],
+        fields: {
+            request: [
+                { id: 'f_indic_para', label: 'Indications', type: 'checkbox', options: ['Hyperparathyroïdie primaire', 'Persistance / Récidive post-op'] },
+                { id: 'f_atcd_para', label: 'Antécédents chirurgicaux (cervicale)', type: 'textarea' },
+            ],
+            consultation: [
+                { id: 'f_cons_pth', label: 'Taux de PTH', type: 'text' },
+                { id: 'f_cons_calcemie', label: 'Calcémie', type: 'text' },
+            ],
+            report: []
+        },
     },
     {
         id: 'exam_scinti_renale_dmsa',
         name: 'Scintigraphie Rénale DMSA',
-        fields: [
-            { id: 'f_indic_dmsa', label: 'Indications', type: 'checkbox', options: ['Recherche de cicatrice post PNA', 'Évaluation fonction relative', 'Anomalie morphologique'] },
-            { id: 'f_atcd_dmsa', label: 'Antécédents urologiques', type: 'textarea' },
-        ],
+        fields: {
+            request: [
+                { id: 'f_indic_dmsa', label: 'Indications', type: 'checkbox', options: ['Recherche de cicatrice post PNA', 'Évaluation fonction relative', 'Anomalie morphologique'] },
+                { id: 'f_atcd_dmsa', label: 'Antécédents urologiques', type: 'textarea' },
+            ],
+            consultation: [],
+            report: []
+        },
     },
     {
         id: 'exam_scinti_renale_dtpa',
         name: 'Scintigraphie Rénale DTPA/MAG3',
-        fields: [
-            { id: 'f_indic_dtpa', label: 'Indications', type: 'checkbox', options: ['Recherche de syndrome obstructif', 'Évaluation fonction relative', 'Test au captopril'] },
-             { id: 'f_atcd_dtpa', label: 'Antécédents urologiques', type: 'textarea' },
-        ],
+        fields: {
+            request: [
+                { id: 'f_indic_dtpa', label: 'Indications', type: 'checkbox', options: ['Recherche de syndrome obstructif', 'Évaluation fonction relative', 'Test au captopril'] },
+                { id: 'f_atcd_dtpa', label: 'Antécédents urologiques', type: 'textarea' },
+            ],
+            consultation: [],
+            report: []
+        },
     },
     {
         id: 'exam_scinti_thyroid',
         name: 'Scintigraphie Thyroïdienne',
-        fields: [
-            { id: 'f_indic_thyro', label: 'Indications', type: 'checkbox', options: ['Caractérisation de nodule', 'Bilan d\'hyperthyroïdie', 'Recherche d\'ectopie'] },
-            { id: 'f_traitement_thyro', label: 'Traitements en cours (ATS, hormones...)', type: 'textarea' },
-        ],
+        fields: {
+            request: [
+                { id: 'f_indic_thyro', label: 'Indications', type: 'checkbox', options: ['Caractérisation de nodule', 'Bilan d\'hyperthyroïdie', 'Recherche d\'ectopie'] },
+                { id: 'f_traitement_thyro', label: 'Traitements en cours (ATS, hormones...)', type: 'textarea' },
+            ],
+            consultation: [
+                { id: 'f_cons_tsh', label: 'TSH', type: 'text' },
+                { id: 'f_cons_t4l', label: 'T4L', type: 'text' },
+                { id: 'f_cons_palpation', label: 'Palpation cervicale', type: 'textarea' },
+            ],
+            report: []
+        },
     }
 ];
 
@@ -348,4 +382,57 @@ export const ROOMS_CONFIG: Room[] = [
     allowedRoleIds: ['role_admin'],
     nextRoomId: null,
   },
+];
+
+export const INITIAL_REPORT_TEMPLATES: ReportTemplate[] = [
+    {
+      id: 'template_so_normal_1',
+      examName: "Scintigraphie Osseuse",
+      name: "Scintigraphie Osseuse - Normale",
+      reportContent: `
+        <p><b>Technique :</b></p>
+        <p>Injection intraveineuse de 740 MBq de 99mTc-HMDP. Acquisition d'images corps entier et de clichés statiques 3 heures après l'injection.</p>
+        <p><b>Résultats :</b></p>
+        <p>L'examen met en évidence une distribution homogène du traceur sur l'ensemble du squelette, sans foyer d'hyperfixation pathologique suspect.</p>
+        <ul>
+            <li>Fixation symétrique des ceintures scapulaire et pelvienne.</li>
+            <li>Rachis sans anomalie de fixation.</li>
+            <li>Articulations périphériques présentant une fixation modérée et symétrique, en rapport avec des remaniements dégénératifs d'arthrose.</li>
+        </ul>
+        <p>Visualisation normale des reins et de la vessie (élimination urinaire).</p>
+      `,
+      conclusionContent: "<p>Absence d'anomalie de fixation osseuse TDM-scintigraphique suspecte d'une localisation secondaire.</p>"
+    },
+    {
+      id: 'template_so_meta_1',
+      examName: "Scintigraphie Osseuse",
+      name: "Scintigraphie Osseuse - Métastases Multiples",
+      reportContent: `
+        <p><b>Technique :</b></p>
+        <p>Injection intraveineuse de 740 MBq de 99mTc-HMDP. Acquisition d'images corps entier et de clichés statiques 3 heures après l'injection.</p>
+        <p><b>Résultats :</b></p>
+        <p>L'examen met en évidence de multiples foyers d'hyperfixation pathologique intense, de topographie non systématisée, disséminés sur l'ensemble du squelette, notamment au niveau :</p>
+        <ul>
+            <li>Du rachis dorsal et lombaire.</li>
+            <li>Du bassin (ilium droit, sacrum).</li>
+            <li>Des côtes (arcs postérieurs droits).</li>
+            <li>Du fémur proximal gauche.</li>
+        </ul>
+        <p>Ces lésions sont très suspectes de localisations secondaires osseuses.</p>
+      `,
+      conclusionContent: "<p>Multiples foyers d'hyperfixation pathologique disséminés sur le squelette, fortement évocateurs de localisations secondaires multiples.</p>"
+    },
+    {
+      id: 'template_st_normal_1',
+      examName: "Scintigraphie Thyroïdienne",
+      name: "Scintigraphie Thyroïdienne - Normale",
+      reportContent: `
+          <p><b>Technique :</b></p>
+          <p>Injection intraveineuse de 185 MBq de 99mTc-Pertechnétate. Acquisition d'images statiques 20 minutes après l'injection.</p>
+          <p><b>Résultats :</b></p>
+          <p>La thyroïde est en position normale. La fixation du traceur est homogène sur l'ensemble des deux lobes, sans nodule hypo ou hyperfixant individualisable.</p>
+          <p>Les contours sont réguliers, la taille de la glande est estimée normale.</p>
+      `,
+      conclusionContent: "<p>Scintigraphie thyroïdienne d'aspect normal.</p>"
+    }
 ];

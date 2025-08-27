@@ -1,3 +1,4 @@
+
 import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { Patient, ExamConfiguration } from '../../types';
 import { ClipboardListIcon } from '../icons/ClipboardListIcon';
@@ -93,7 +94,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                 {selectedExamConfig && (
                     <fieldset className="border p-3 rounded-md space-y-3">
                         <legend className="text-md font-semibold px-1">Détails de l'examen</legend>
-                        {selectedExamConfig.fields.map(field => (
+                        {/* FIX: Use selectedExamConfig.fields.request.map as fields is an object */}
+                        {selectedExamConfig.fields.request.map(field => (
                            <DynamicFormField
                              key={field.id}
                              field={field}

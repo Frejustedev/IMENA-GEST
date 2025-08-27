@@ -27,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="bg-slate-800 text-white p-4 shadow-md flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 no-print">
       <h1 className="text-2xl font-bold tracking-tight text-center sm:text-left">
-        Gestion Parcours Patient MN
+        IMENA-GEST
       </h1>
       <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
         <div className="relative w-full max-w-xs">

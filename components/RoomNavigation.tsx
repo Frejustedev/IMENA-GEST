@@ -7,6 +7,8 @@ import { CalendarClockIcon } from './icons/CalendarClockIcon';
 import { ChartBarIcon } from './icons/ChartBarIcon';
 import { WrenchScrewdriverIcon } from './icons/WrenchScrewdriverIcon';
 import { Cog8ToothIcon } from './icons/Cog8ToothIcon';
+import { DatabaseIcon } from './icons/DatabaseIcon';
+import { ClipboardDocumentListIcon } from './icons/ClipboardDocumentListIcon';
 
 
 interface RoomNavigationProps {
@@ -18,9 +20,11 @@ interface RoomNavigationProps {
   onShowRoomsOverview: () => void;
   onShowActivityFeed: () => void;
   onShowStatisticsView: () => void;
+  onShowDatabaseView: () => void;
   isUserAdmin: boolean;
   onShowAdministrationView: () => void;
   onShowExamSettingsView: () => void;
+  onShowReportTemplatesSettingsView: () => void;
 }
 
 export const RoomNavigation: React.FC<RoomNavigationProps> = ({ 
@@ -32,9 +36,11 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
   onShowRoomsOverview,
   onShowActivityFeed,
   onShowStatisticsView,
+  onShowDatabaseView,
   isUserAdmin,
   onShowAdministrationView,
-  onShowExamSettingsView
+  onShowExamSettingsView,
+  onShowReportTemplatesSettingsView
 }) => {
   const baseButtonClass = "w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors duration-150";
   const activeClass = "bg-sky-600 text-white shadow-md";
@@ -70,6 +76,13 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
       icon: ChartBarIcon, 
       action: onShowStatisticsView,
       viewType: 'statistics' as ActiveView
+    },
+     { 
+      id: 'database', 
+      label: "Base de Données", 
+      icon: DatabaseIcon, 
+      action: onShowDatabaseView,
+      viewType: 'database' as ActiveView
     },
   ];
 
@@ -123,6 +136,15 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
             >
                 <WrenchScrewdriverIcon className={`h-5 w-5 flex-shrink-0 ${currentView === 'exam_settings' ? activeIconClass : inactiveIconClass}`} />
                 <span className="truncate">Paramètres des Examens</span>
+            </button>
+            
+            <button
+                onClick={onShowReportTemplatesSettingsView}
+                className={`${baseButtonClass} ${currentView === 'report_templates_settings' ? activeClass : inactiveClass}`}
+                aria-current={currentView === 'report_templates_settings' ? 'page' : undefined}
+            >
+                <ClipboardDocumentListIcon className={`h-5 w-5 flex-shrink-0 ${currentView === 'report_templates_settings' ? activeIconClass : inactiveIconClass}`} />
+                <span className="truncate">Modèles de CR</span>
             </button>
 
             <button

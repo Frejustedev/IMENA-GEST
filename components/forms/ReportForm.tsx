@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, useRef } from 'react';
-import { Patient, RoomId, RequestIndications, ScintigraphyExam } from '../../types';
+import { Patient, RoomId, RequestIndications, ScintigraphyExam, ExamConfiguration, ReportTemplate } from '../../types';
 import { DocumentTextIcon } from '../icons/DocumentTextIcon';
 import { BoneScintigraphyDataView } from './BoneScintigraphyDataView';
 import { ParathyroidScintigraphyDataView } from './ParathyroidScintigraphyDataView';
@@ -7,11 +7,13 @@ import { RenalDMSADataView } from './RenalDMSADataView';
 import { RenalDTPAMAG3DataView } from './RenalDTPAMAG3DataView';
 import { ThyroidScintigraphyDataView } from './ThyroidScintigraphyDataView';
 import RichTextEditor, { RichTextEditorRef } from '../RichTextEditor';
-import { REPORT_TEMPLATES, QUICK_PHRASES } from '../../reportTemplates';
+import { QUICK_PHRASES } from '../../reportConstants';
+import { DynamicFormField } from './DynamicFormField';
 
 interface ReportFormData {
   texteCompteRendu?: string;
   conclusionCr?: string;
+  customFields?: { [key: string]: any };
 }
 
 interface ReportFormProps {
@@ -20,6 +22,8 @@ interface ReportFormProps {
   onSubmit: (data: ReportFormData) => void;
   patient: Patient;
   initialData?: ReportFormData;
+  examConfigurations: ExamConfiguration[];
+  reportTemplates: ReportTemplate[];
 }
 
 // Helper components for the context panel
@@ -40,54 +44,56 @@ const ContextItem: React.FC<{ label: string; value?: string | number | null }> =
   );
 };
 
-const formatIndications = (indications?: RequestIndications) => {
-    if (!indications) return "Non spécifiées";
-    const parts = [];
-    if (indications.bilanExtensionInitial) parts.push("Bilan d'extension initial");
-    if (indications.bilanRecidive) parts.push("Bilan de récidive");
-    if (indications.bilanComparatif) parts.push("Bilan comparatif");
-    if (indications.evaluation) parts.push("Évaluation");
-    if (indications.autres) parts.push(indications.autres);
-    return parts.length > 0 ? parts.join(', ') : 'Non spécifiées';
-};
-
-
 export const ReportForm: React.FC<ReportFormProps> = ({
   isOpen,
   onClose,
   onSubmit,
   patient,
   initialData,
+  examConfigurations,
+  reportTemplates,
 }) => {
-  const [reportHtml, setReportHtml] = useState(initialData?.texteCompteRendu || '');
-  const [conclusionHtml, setConclusionHtml] = useState(initialData?.conclusionCr || '');
+  const [formData, setFormData] = useState<ReportFormData>(initialData || { texteCompteRendu: '', conclusionCr: '', customFields: {} });
 
   const reportEditorRef = useRef<RichTextEditorRef>(null);
   const conclusionEditorRef = useRef<RichTextEditorRef>(null);
   
   const requestedExam = patient.roomSpecificData?.[RoomId.REQUEST]?.requestedExam;
-  const templatesForExam = requestedExam ? REPORT_TEMPLATES[requestedExam as ScintigraphyExam] : [];
+  const examConfig = examConfigurations.find(c => c.name === requestedExam);
+  
+  const templatesForExam = requestedExam ? reportTemplates.filter(t => t.examName === requestedExam) : [];
   const phrasesForExam = requestedExam ? QUICK_PHRASES[requestedExam as ScintigraphyExam] : [];
 
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTemplateName = e.target.value;
     const template = templatesForExam?.find(t => t.name === selectedTemplateName);
     if (template) {
-        reportEditorRef.current?.setContent(template.report);
-        conclusionEditorRef.current?.setContent(template.conclusion);
+        reportEditorRef.current?.setContent(template.reportContent);
+        conclusionEditorRef.current?.setContent(template.conclusionContent);
+        setFormData(prev => ({ ...prev, texteCompteRendu: template.reportContent, conclusionCr: template.conclusionContent }));
     }
   };
 
   const handleInsertPhrase = (phrase: string) => {
-      // Prioritize inserting into the main report editor
       reportEditorRef.current?.insertHTML(`<span> ${phrase}</span>`);
+  };
+  
+  const handleCustomFieldChange = (fieldId: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      customFields: {
+        ...(prev.customFields || {}),
+        [fieldId]: value,
+      },
+    }));
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit({
-        texteCompteRendu: reportHtml,
-        conclusionCr: conclusionHtml,
+      ...formData,
+      texteCompteRendu: reportEditorRef.current?.getHTML(),
+      conclusionCr: conclusionEditorRef.current?.getHTML(),
     });
   };
 
@@ -110,10 +116,8 @@ export const ReportForm: React.FC<ReportFormProps> = ({
     }
   };
 
-
   if (!isOpen) return null;
   
-  const examIndications = formatIndications(patient.roomSpecificData?.[RoomId.REQUEST]?.indications);
   const injectionData = patient.roomSpecificData?.[RoomId.INJECTION];
   const examinationData = patient.roomSpecificData?.[RoomId.EXAMINATION];
 
@@ -137,7 +141,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                 <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-inner overflow-y-auto border">
                     <h3 className="text-lg font-bold text-slate-800 mb-4">Résumé du Dossier</h3>
                     <ContextSection title="Patient"><ContextItem label="Nom" value={patient.name} /><ContextItem label="Âge" value={patient.age ? `${patient.age} ans` : 'N/A'} /><ContextItem label="ID" value={patient.id} /></ContextSection>
-                    <ContextSection title="Détails de l'Examen"><ContextItem label="Examen demandé" value={requestedExam} /><ContextItem label="Indications" value={examIndications} /></ContextSection>
+                    <ContextSection title="Détails de l'Examen"><ContextItem label="Examen demandé" value={requestedExam} /></ContextSection>
                     <ContextSection title="Données Techniques"><ContextItem label="Produit Injecté" value={injectionData?.produitInjecte} /><ContextItem label="Dose" value={injectionData?.dose} /><ContextItem label="Heure d'Injection" value={injectionData?.heureInjection} /><hr className="my-2"/><ContextItem label="Qualité des Images" value={examinationData?.qualiteImages} /><ContextItem label="Commentaires Technicien" value={examinationData?.commentairesTechnicien} /></ContextSection>
                     <ContextSection title="Résumé Clinique">{renderClinicalSummary()}</ContextSection>
                 </div>
@@ -151,9 +155,24 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                             {templatesForExam?.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
                         </select>
                     </div>
+
+                    {examConfig && examConfig.fields.report.length > 0 && (
+                        <fieldset className="border p-3 rounded-md bg-white space-y-3">
+                            <legend className="text-md font-semibold px-1">Champs Structurés du CR</legend>
+                            {examConfig.fields.report.map(field => (
+                                <DynamicFormField
+                                    key={field.id}
+                                    field={field}
+                                    value={formData.customFields?.[field.id]}
+                                    onChange={handleCustomFieldChange}
+                                />
+                            ))}
+                        </fieldset>
+                    )}
+
                     <div className="flex-grow flex flex-col min-h-0">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Texte du Compte Rendu</label>
-                        <RichTextEditor ref={reportEditorRef} initialValue={reportHtml} onChange={setReportHtml} />
+                        <RichTextEditor ref={reportEditorRef} initialValue={formData.texteCompteRendu} onChange={(html) => setFormData(p => ({...p, texteCompteRendu: html}))} />
                     </div>
                     
                     {phrasesForExam && phrasesForExam.length > 0 && (
@@ -171,7 +190,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                     
                     <div className="flex-shrink-0 flex flex-col h-48">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Conclusion</label>
-                        <RichTextEditor ref={conclusionEditorRef} initialValue={conclusionHtml} onChange={setConclusionHtml} />
+                        <RichTextEditor ref={conclusionEditorRef} initialValue={formData.conclusionCr} onChange={(html) => setFormData(p => ({...p, conclusionCr: html}))} />
                     </div>
                 </div>
             </div>

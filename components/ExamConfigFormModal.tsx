@@ -10,14 +10,19 @@ interface ExamConfigFormModalProps {
   initialData?: ExamConfiguration | null;
 }
 
+type ConfigTab = 'request' | 'consultation' | 'report';
+
 export const ExamConfigFormModal: React.FC<ExamConfigFormModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
-  const [config, setConfig] = useState<Partial<ExamConfiguration>>({ name: '', fields: [] });
+  const [config, setConfig] = useState<Partial<ExamConfiguration>>({ name: '', fields: { request: [], consultation: [], report: [] } });
+  const [activeTab, setActiveTab] = useState<ConfigTab>('request');
   const isEditing = !!initialData;
 
   useEffect(() => {
     if (isOpen) {
+      const initialFields = initialData?.fields || { request: [], consultation: [], report: [] };
       // Deep copy to prevent state mutation issues
-      setConfig(initialData ? JSON.parse(JSON.stringify(initialData)) : { name: '', fields: [] });
+      setConfig(initialData ? { ...JSON.parse(JSON.stringify(initialData)), fields: initialFields } : { name: '', fields: { request: [], consultation: [], report: [] } });
+      setActiveTab('request');
     }
   }, [isOpen, initialData]);
 
@@ -27,19 +32,37 @@ export const ExamConfigFormModal: React.FC<ExamConfigFormModalProps> = ({ isOpen
 
   const handleFieldChange = (index: number, fieldData: Partial<ConfigurableField>) => {
     setConfig(prev => {
-      const newFields = [...(prev.fields || [])];
+      const newFields = [...(prev.fields?.[activeTab] || [])];
       newFields[index] = { ...newFields[index], ...fieldData };
-      return { ...prev, fields: newFields };
+      return { 
+        ...prev, 
+        fields: {
+          ...prev.fields,
+          [activeTab]: newFields,
+        }
+      };
     });
   };
 
   const addField = () => {
     const newField: ConfigurableField = { id: `field_${Date.now()}`, label: '', type: 'text', options: [] };
-    setConfig(prev => ({ ...prev, fields: [...(prev.fields || []), newField] }));
+    setConfig(prev => ({ 
+        ...prev, 
+        fields: {
+            ...prev.fields,
+            [activeTab]: [...(prev.fields?.[activeTab] || []), newField]
+        }
+    }));
   };
 
   const removeField = (index: number) => {
-    setConfig(prev => ({ ...prev, fields: (prev.fields || []).filter((_, i) => i !== index) }));
+    setConfig(prev => ({ 
+        ...prev, 
+        fields: {
+            ...prev.fields,
+            [activeTab]: (prev.fields?.[activeTab] || []).filter((_, i) => i !== index) 
+        }
+    }));
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -51,6 +74,20 @@ export const ExamConfigFormModal: React.FC<ExamConfigFormModalProps> = ({ isOpen
     onSubmit(config as ExamConfiguration | Omit<ExamConfiguration, 'id'>);
     onClose();
   };
+  
+  const TabButton: React.FC<{tabId: ConfigTab, label: string}> = ({tabId, label}) => (
+      <button
+        type="button"
+        onClick={() => setActiveTab(tabId)}
+        className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+          activeTab === tabId
+            ? 'border-b-2 border-sky-500 text-sky-600 bg-white'
+            : 'text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        {label}
+      </button>
+  );
 
   if (!isOpen) return null;
 
@@ -60,16 +97,23 @@ export const ExamConfigFormModal: React.FC<ExamConfigFormModalProps> = ({ isOpen
         <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
           <div className="p-6 border-b">
             <h3 className="text-xl font-semibold text-gray-800">{isEditing ? 'Modifier' : 'Ajouter'} un type d'examen</h3>
-          </div>
-          <div className="p-6 space-y-4 overflow-y-auto flex-grow">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nom de l'examen <span className="text-red-500">*</span></label>
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mt-4">Nom de l'examen <span className="text-red-500">*</span></label>
               <input type="text" value={config.name || ''} onChange={handleNameChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required />
             </div>
+          </div>
+           <div className="border-b border-gray-200 bg-slate-50">
+            <nav className="-mb-px flex space-x-4 px-4" aria-label="Tabs">
+                <TabButton tabId="request" label="Demande" />
+                <TabButton tabId="consultation" label="Consultation" />
+                <TabButton tabId="report" label="Compte Rendu" />
+            </nav>
+          </div>
+          <div className="p-6 space-y-4 overflow-y-auto flex-grow">
             <fieldset className="border p-3 rounded-md">
-              <legend className="text-md font-semibold px-1">Champs du formulaire</legend>
+              <legend className="text-md font-semibold px-1">Champs du formulaire pour: <span className="capitalize text-sky-700">{activeTab}</span></legend>
               <div className="space-y-3 max-h-80 overflow-y-auto pr-2 mt-2">
-                {(config.fields || []).map((field, index) => (
+                {(config.fields?.[activeTab] || []).map((field, index) => (
                   <div key={field.id} className="p-3 bg-slate-50 rounded-md border space-y-2">
                     <div className="flex justify-between items-center">
                       <p className="font-medium text-sm text-slate-600">Champ {index + 1}</p>

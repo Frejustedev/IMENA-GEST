@@ -1,3 +1,4 @@
+
 import React, { useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 
 interface RichTextEditorProps {
@@ -8,6 +9,8 @@ interface RichTextEditorProps {
 export interface RichTextEditorRef {
   insertHTML: (html: string) => void;
   setContent: (html: string) => void;
+  // FIX: Add getHTML to the ref interface to allow parent components to read the content.
+  getHTML: () => string;
 }
 
 const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ initialValue, onChange }, ref) => {
@@ -47,7 +50,11 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ ini
         editorRef.current.innerHTML = html;
         handleInput();
       }
-    }
+    },
+    // FIX: Implement getHTML to return the current content of the editor.
+    getHTML: () => {
+      return editorRef.current?.innerHTML || '';
+    },
   }));
 
   const toolbarButtonClass = "p-2 rounded-md hover:bg-slate-200 transition-colors";

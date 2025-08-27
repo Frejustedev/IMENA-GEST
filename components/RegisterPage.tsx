@@ -35,7 +35,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onSwitch
         return;
     }
     if (password !== confirmPassword) {
-      setError("Les mots de passe не correspondent pas.");
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
     setError('');

@@ -1,3 +1,4 @@
+
 import React, { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import { ReferringEntity, ReferringEntityType, Patient, ExamConfiguration, NewPatientData } from '../types';
 import { calculateAge } from '../utils/dateUtils';
@@ -206,7 +207,8 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
 
                         {selectedExamConfig && (
                            <div className="space-y-3 mt-4 pt-3 border-t">
-                             {selectedExamConfig.fields.map(field => (
+                             {/* FIX: Use selectedExamConfig.fields.request.map as fields is an object */}
+                             {selectedExamConfig.fields.request.map(field => (
                                  <DynamicFormField
                                     key={field.id}
                                     field={field}

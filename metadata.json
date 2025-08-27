@@ -1,5 +1,5 @@
 {
-  "name": "Gestion Parcours Patient MN",
+  "name": "IMENA-GEST",
   "description": "Application de gestion du parcours patient au sein d'un service de médecine nucléaire, organisée par salles et étapes.",
   "requestFramePermissions": [],
   "prompt": ""

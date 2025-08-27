@@ -114,45 +114,60 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
     const roomData = patient.roomSpecificData?.[roomId];
     if (!roomData) return null;
 
-    if (roomId === RoomId.REQUEST) {
-      const examConfig = examConfigurations.find(c => c.name === roomData.requestedExam);
-      const customFields = roomData.customFields;
-
-      if (!examConfig || !customFields || Object.keys(customFields).length === 0) return null;
-      
-      return (
-        <dl className="space-y-1 text-xs text-slate-600">
-           {examConfig.fields.map(field => {
-                const value = customFields[field.id];
-                if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
-                    return null;
-                }
-                const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-                 return (
-                    <div key={field.id}>
-                        <dt className="font-medium text-slate-500">{field.label}:</dt>
-                        <dd className="ml-2 whitespace-pre-wrap">{displayValue}</dd>
-                    </div>
-                );
-           })}
-        </dl>
-      );
-    }
+    const examConfig = examConfigurations.find(c => c.name === patient.roomSpecificData?.[RoomId.REQUEST]?.requestedExam);
+    const customFields = (roomData as any).customFields;
     
-    // Default rendering for other rooms
+    let fieldDefinitions: any[] = [];
+    if (examConfig) {
+        if(roomId === RoomId.REQUEST) fieldDefinitions = examConfig.fields.request;
+        else if (roomId === RoomId.CONSULTATION) fieldDefinitions = examConfig.fields.consultation;
+        else if (roomId === RoomId.REPORT) fieldDefinitions = examConfig.fields.report;
+    }
+
+    if (!examConfig || !customFields || Object.keys(customFields).length === 0) return null;
+      
     return (
-        <dl className="space-y-1 text-xs text-slate-600">
-          {Object.entries(roomData as Record<string, any>).map(([key, value]) => {
-            if (value === null || value === undefined || value === '' || typeof value === 'object' || key === 'customFields' || key === 'requestedExam') return null;
-            return (
+        <div className="mt-2">
+            <h5 className="text-sm font-semibold text-slate-700 mb-1 border-t pt-2">Champs personnalisés</h5>
+            <dl className="space-y-1 text-xs text-slate-600">
+            {fieldDefinitions.map(field => {
+                    const value = customFields[field.id];
+                    if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+                        return null;
+                    }
+                    const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+                    return (
+                        <div key={field.id}>
+                            <dt className="font-medium text-slate-500">{field.label}:</dt>
+                            <dd className="ml-2 whitespace-pre-wrap">{displayValue}</dd>
+                        </div>
+                    );
+            })}
+            </dl>
+        </div>
+    );
+  };
+  
+  const renderStandardFields = (roomId: RoomId) => {
+      const roomData = patient.roomSpecificData?.[roomId];
+      if (!roomData) return null;
+
+      const fieldsToShow = Object.entries(roomData as Record<string, any>).filter(([key, value]) => {
+          return value !== null && value !== undefined && value !== '' && typeof value !== 'object' && key !== 'customFields';
+      });
+
+      if (fieldsToShow.length === 0) return null;
+
+      return (
+         <dl className="space-y-1 text-xs text-slate-600">
+          {fieldsToShow.map(([key, value]) => (
               <div key={key}>
                 <dt className="font-medium text-slate-500">{formatFieldKey(key)}:</dt>
                 <dd className="ml-2 whitespace-pre-wrap">{String(value)}</dd>
               </div>
-            );
-          })}
+            ))}
         </dl>
-    )
+      )
   };
 
   return (
@@ -285,11 +300,14 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
         <div>
             <h3 className="text-xl font-semibold text-slate-700 mb-4 border-b pb-2">Données Spécifiques par Salle</h3>
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 print:max-h-full print:overflow-visible">
-                {specializedDataComponent}
+                {specializedDataComponent && (
+                    <div className="p-4 bg-slate-100 rounded-lg shadow-inner print:break-inside-avoid">
+                        <h4 className="text-md font-semibold text-gray-500 mb-2">Données cliniques (Ancien format)</h4>
+                        {specializedDataComponent}
+                    </div>
+                )}
 
                 {roomsConfig.map(room => {
-                  if (room.id === RoomId.CONSULTATION && specializedDataComponent) return null;
-                  
                   const roomData = patient.roomSpecificData?.[room.id];
                   if (!roomData || Object.keys(roomData).length === 0) return null;
 
@@ -310,6 +328,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
                                       <div className="prose prose-sm max-w-none mt-1" dangerouslySetInnerHTML={{ __html: conclusionCr }} />
                                   </div>
                               )}
+                              {renderCustomFields(room.id as RoomId)}
                           </div>
                       );
                   }
@@ -317,6 +336,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
                   return (
                       <div key={room.id} className="p-4 bg-slate-50 rounded-lg shadow-inner print:break-inside-avoid">
                         <h4 className="text-md font-semibold text-sky-600 mb-2">{room.name}</h4>
+                        {renderStandardFields(room.id as RoomId)}
                         {renderCustomFields(room.id as RoomId)}
                       </div>
                   );

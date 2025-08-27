@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ExamConfiguration } from '../types';
 import { WrenchScrewdriverIcon } from './icons/WrenchScrewdriverIcon';
@@ -64,7 +65,8 @@ export const ExamSettingsView: React.FC<ExamSettingsViewProps> = ({ examConfigur
               {examConfigurations.map(config => (
                 <tr key={config.id} className="hover:bg-slate-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{config.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{config.fields.length} champ(s)</td>
+                  {/* FIX: Correctly calculate the total number of fields by summing the lengths of the arrays within the fields object. */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{(config.fields.request.length + config.fields.consultation.length + config.fields.report.length)} champ(s)</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button onClick={() => handleEdit(config)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Modifier"><PencilIcon className="h-5 w-5" /></button>
                     <button onClick={() => handleDelete(config)} className="text-red-600 hover:text-red-900 p-1" title="Supprimer"><TrashIcon className="h-5 w-5" /></button>

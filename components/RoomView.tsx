@@ -10,6 +10,7 @@ import { ListBulletIcon } from './icons/ListBulletIcon';
 import { PlusCircleIcon } from './icons/PlusCircleIcon'; 
 import { ClipboardListIcon } from './icons/ClipboardListIcon';
 import { isDateInPeriod } from '../utils/dateUtils'; 
+import { MagnifyingGlassIcon } from './icons/MagnifyingGlassIcon';
 
 interface RoomViewProps {
   room: Room;
@@ -23,6 +24,7 @@ interface RoomViewProps {
 }
 
 const ITEMS_PER_PAGE = 10;
+const ARCHIVE_ITEMS_PER_PAGE = 15;
 
 // Helper to get dynamic statistic label for processed actions
 const getProcessedActionLabel = (roomId: RoomId): string => {
@@ -59,6 +61,80 @@ export const RoomView: React.FC<RoomViewProps> = ({
   const [seenPage, setSeenPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const [sortOrder, setSortOrder] = useState<'time_asc' | 'alpha_asc'>('time_asc');
+
+  // State for Archive View
+  const [archiveSearchTerm, setArchiveSearchTerm] = useState('');
+  const [archiveCurrentPage, setArchiveCurrentPage] = useState(1);
+
+  if (room.id === RoomId.ARCHIVE) {
+    const filteredArchivedPatients = useMemo(() => {
+        return patientsInRoom.filter(p => 
+            p.name.toLowerCase().includes(archiveSearchTerm.toLowerCase()) ||
+            p.id.toLowerCase().includes(archiveSearchTerm.toLowerCase())
+        ).sort((a,b) => new Date(b.history[b.history.length-1].entryDate).getTime() - new Date(a.history[a.history.length-1].entryDate).getTime());
+    }, [patientsInRoom, archiveSearchTerm]);
+
+    const totalPages = Math.ceil(filteredArchivedPatients.length / ARCHIVE_ITEMS_PER_PAGE);
+    const paginatedPatients = filteredArchivedPatients.slice(
+        (archiveCurrentPage - 1) * ARCHIVE_ITEMS_PER_PAGE,
+        archiveCurrentPage * ARCHIVE_ITEMS_PER_PAGE
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+                <div className="flex items-center space-x-3 mb-1">
+                    <room.icon className="h-8 w-8 text-sky-600" />
+                    <div>
+                        <h2 className="text-3xl font-bold text-slate-800">{room.name}</h2>
+                        <p className="text-sm text-slate-500">{room.description}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-white p-5 rounded-xl shadow-lg flex flex-col min-h-[500px]">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-slate-700">Dossiers Archivés ({filteredArchivedPatients.length})</h3>
+                    <div className="relative w-full max-w-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
+                        </div>
+                        <input
+                            type="search"
+                            value={archiveSearchTerm}
+                            onChange={(e) => { setArchiveSearchTerm(e.target.value); setArchiveCurrentPage(1); }}
+                            placeholder="Rechercher par nom ou ID..."
+                            className="block w-full bg-slate-50 border border-slate-300 rounded-md py-2 pl-10 pr-3 text-sm"
+                        />
+                    </div>
+                </div>
+                {paginatedPatients.length === 0 ? (
+                    <p className="text-slate-500 italic text-center py-8 flex-grow">Aucun dossier archivé trouvé.</p>
+                ) : (
+                    <div className="space-y-3 overflow-y-auto flex-grow pr-2">
+                        {paginatedPatients.map(patient => (
+                            <div key={patient.id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <UsersIcon className="h-8 w-8 text-slate-400 flex-shrink-0" />
+                                    <div>
+                                        <button onClick={() => onViewPatientDetail(patient)} className="text-md font-semibold text-sky-700 hover:underline focus:outline-none text-left">
+                                            {patient.name}
+                                        </button>
+                                        <p className="text-xs text-slate-500">ID: {patient.id} - Archivé le: {new Date(patient.history[patient.history.length-1].entryDate).toLocaleDateString('fr-FR')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <Pagination
+                    currentPage={archiveCurrentPage}
+                    totalPages={totalPages}
+                    onPageChange={setArchiveCurrentPage}
+                />
+            </div>
+        </div>
+    );
+  }
 
   const waitingPatients = useMemo(() => {
     const filtered = patientsInRoom.filter(p => p.statusInRoom === PatientStatusInRoom.WAITING);

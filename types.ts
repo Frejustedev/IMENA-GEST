@@ -74,7 +74,7 @@ export interface ReferringEntity {
 
 export type PeriodOption = 'today' | 'thisWeek' | 'thisMonth';
 
-export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration' | 'exam_settings';
+export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration' | 'exam_settings' | 'database' | 'report_templates_settings';
 
 export type PaymentMethod = 'nonAssure' | 'assure' | 'priseEnCharge' | 'autres';
 
@@ -110,7 +110,11 @@ export interface ConfigurableField {
 export interface ExamConfiguration {
   id: string;
   name: string;
-  fields: ConfigurableField[];
+  fields: {
+    request: ConfigurableField[];
+    consultation: ConfigurableField[];
+    report: ConfigurableField[];
+  };
 }
 // --- END: Exam Configuration Types ---
 
@@ -746,12 +750,6 @@ export interface Patient {
   roomSpecificData?: {
     [RoomId.REQUEST]?: {
       requestedExam?: string; // Changed from ScintigraphyExam
-      // FIX: Add fields from RequestForm to align with application logic.
-      indications?: RequestIndications;
-      medicalHistory?: string;
-      illnessHistory?: string;
-      paraclinicalExams?: string;
-      // FIX: Relax customFields type to 'any' to match usage and prevent type conflicts.
       customFields?: { [fieldId: string]: any };
     };
     [RoomId.APPOINTMENT]?: {
@@ -762,7 +760,8 @@ export interface Patient {
     [RoomId.CONSULTATION]?: {
       resumeConsultation?: string;
       decisionSuite?: string;
-      // START: Specialized Consultation Data
+      customFields?: { [fieldId: string]: any };
+      // START: Specialized Consultation Data (Legacy)
       thyroidData?: ThyroidScintigraphyData;
       boneData?: BoneScintigraphyData;
       parathyroidData?: ParathyroidScintigraphyData;
@@ -784,6 +783,7 @@ export interface Patient {
     [RoomId.REPORT]?: {
       texteCompteRendu?: string;
       conclusionCr?: string;
+      customFields?: { [fieldId: string]: any };
     };
     [RoomId.RETRAIT_CR_SORTIE]?: {
       dateRetrait?: string;
@@ -860,3 +860,13 @@ export interface TimelineEvent {
     type: TimelineEventType;
     description: string;
 }
+
+// --- START: Report Template Types ---
+export interface ReportTemplate {
+  id: string;
+  examName: ScintigraphyExam;
+  name: string;
+  reportContent: string;
+  conclusionContent: string;
+}
+// --- END: Report Template Types ---
