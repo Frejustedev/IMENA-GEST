@@ -1,5 +1,5 @@
 import React from 'react';
-import { Patient, Room, RoomId } from '../types';
+import { Patient, Room, RoomId, ExamConfiguration } from '../types';
 import { ThyroidScintigraphyForm } from './forms/ThyroidScintigraphyForm';
 import { BoneScintigraphyForm } from './forms/BoneScintigraphyForm';
 import { ParathyroidScintigraphyForm } from './forms/ParathyroidScintigraphyForm';
@@ -18,6 +18,7 @@ interface PatientFormModalProps {
   onSubmit: (patientId: string, roomId: RoomId, formData: any) => void;
   patient: Patient;
   room: Room;
+  examConfigurations: ExamConfiguration[];
 }
 
 export const PatientFormModal: React.FC<PatientFormModalProps> = ({
@@ -26,6 +27,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
   onSubmit,
   patient,
   room,
+  examConfigurations
 }) => {
   if (!isOpen || !patient || !room) return null;
 
@@ -39,6 +41,7 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           patient={patient}
           initialData={patient.roomSpecificData?.[RoomId.REQUEST]}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
+          examConfigurations={examConfigurations}
         />
       );
 

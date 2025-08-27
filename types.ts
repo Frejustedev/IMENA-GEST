@@ -74,9 +74,46 @@ export interface ReferringEntity {
 
 export type PeriodOption = 'today' | 'thisWeek' | 'thisMonth';
 
-export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration'; // Ajout de 'administration'
+export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration' | 'exam_settings';
 
 export type PaymentMethod = 'nonAssure' | 'assure' | 'priseEnCharge' | 'autres';
+
+// FIX: Add NewPatientData interface for creating new patients to resolve spread operator type error.
+export interface NewPatientData {
+  name: string;
+  dateOfBirth: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  referringEntity?: ReferringEntity;
+}
+
+// FIX: Add RequestIndications interface used in forms and patient data.
+export interface RequestIndications {
+  bilanExtensionInitial?: boolean;
+  bilanRecidive?: boolean;
+  bilanComparatif?: boolean;
+  evaluation?: boolean;
+  autres?: string;
+}
+
+// --- START: Exam Configuration Types ---
+export type ConfigurableFieldType = 'text' | 'textarea' | 'select' | 'checkbox';
+
+export interface ConfigurableField {
+  id: string;
+  label: string;
+  type: ConfigurableFieldType;
+  options?: string[]; // For 'select' and 'checkbox' types
+}
+
+export interface ExamConfiguration {
+  id: string;
+  name: string;
+  fields: ConfigurableField[];
+}
+// --- END: Exam Configuration Types ---
+
 
 // --- START: Bone Scintigraphy Form Data Types ---
 export interface BoneScintigraphyData {
@@ -684,15 +721,6 @@ export interface ThyroidScintigraphyData {
 }
 // --- END: Thyroid Scintigraphy Form Data Types ---
 
-
-export interface RequestIndications {
-  bilanExtensionInitial?: boolean;
-  bilanRecidive?: boolean;
-  bilanComparatif?: boolean;
-  evaluation?: boolean;
-  autres?: string;
-}
-
 export interface PatientDocument {
   id: string;
   name: string;
@@ -717,11 +745,14 @@ export interface Patient {
   documents?: PatientDocument[];
   roomSpecificData?: {
     [RoomId.REQUEST]?: {
-      requestedExam?: ScintigraphyExam;
+      requestedExam?: string; // Changed from ScintigraphyExam
+      // FIX: Add fields from RequestForm to align with application logic.
       indications?: RequestIndications;
       medicalHistory?: string;
       illnessHistory?: string;
       paraclinicalExams?: string;
+      // FIX: Relax customFields type to 'any' to match usage and prevent type conflicts.
+      customFields?: { [fieldId: string]: any };
     };
     [RoomId.APPOINTMENT]?: {
       dateRdv?: string;

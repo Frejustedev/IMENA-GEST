@@ -14,18 +14,22 @@ import { HotLabView } from './components/HotLabView';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { AdministrationView } from './components/AdministrationView';
+import { ExamSettingsView } from './components/ExamSettingsView';
 import { 
   Patient, Room, RoomId, PatientStatusInRoom, PatientHistoryEntry, 
   PeriodOption, ActiveView, HotLabData, User, TracerLot, PreparationLog,
-  ReferringEntity, RequestIndications, PatientDocument, Role
+  ReferringEntity, RequestIndications, PatientDocument, Role, ExamConfiguration,
+  NewPatientData
 } from './types';
-import { ROOMS_CONFIG, INITIAL_PATIENTS, INITIAL_HOT_LAB_DATA, INITIAL_ROLES } from './constants';
+import { ROOMS_CONFIG, INITIAL_PATIENTS, INITIAL_HOT_LAB_DATA, INITIAL_ROLES, INITIAL_EXAM_CONFIGURATIONS } from './constants';
 import { calculateAge } from './utils/dateUtils';
 
 // --- Auth Service (simulated with localStorage) ---
 const USERS_STORAGE_KEY = 'gestion_patient_mn_users';
 const ROLES_STORAGE_KEY = 'gestion_patient_mn_roles';
 const SESSION_STORAGE_KEY = 'gestion_patient_mn_session';
+const EXAM_CONFIGS_STORAGE_KEY = 'gestion_patient_mn_exam_configs';
+
 
 const getInitialUsers = (): User[] => {
   try {
@@ -59,6 +63,19 @@ const getInitialRoles = (): Role[] => {
         return [];
     }
 };
+
+const getInitialExamConfigs = (): ExamConfiguration[] => {
+    try {
+        const saved = localStorage.getItem(EXAM_CONFIGS_STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+        localStorage.setItem(EXAM_CONFIGS_STORAGE_KEY, JSON.stringify(INITIAL_EXAM_CONFIGURATIONS));
+        return INITIAL_EXAM_CONFIGURATIONS;
+    } catch (error) {
+        console.error("Erreur lors de l'initialisation des configurations d'examen:", error);
+        return [];
+    }
+};
+
 
 const sessionService = {
   login: (user: User) => {
@@ -97,6 +114,10 @@ function App() {
   const [roles, setRoles] = useState<Role[]>(getInitialRoles);
   const [currentUser, setCurrentUser] = useState<User | null>(() => sessionService.getCurrentUser());
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  
+  // --- Exam Configuration State ---
+  const [examConfigurations, setExamConfigurations] = useState<ExamConfiguration[]>(getInitialExamConfigs);
+
 
   // Persist users and roles to localStorage whenever they change
   useEffect(() => {
@@ -106,6 +127,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(roles));
   }, [roles]);
+
+  useEffect(() => {
+    localStorage.setItem(EXAM_CONFIGS_STORAGE_KEY, JSON.stringify(examConfigurations));
+  }, [examConfigurations]);
 
 
   // --- Authentication Handlers ---
@@ -193,6 +218,29 @@ function App() {
       }
       setRoles(prevRoles => prevRoles.filter(r => r.id !== roleId));
   };
+  
+    // --- Exam Configuration Handlers ---
+    const handleSaveExamConfiguration = (configData: ExamConfiguration | Omit<ExamConfiguration, 'id'>) => {
+        setExamConfigurations(prev => {
+            if ('id' in configData && configData.id) {
+                // Edit existing
+                return prev.map(c => c.id === configData.id ? { ...c, ...configData } : c);
+            } else {
+                // Add new
+                const newConfig: ExamConfiguration = {
+                    ...configData,
+                    id: `exam_${Date.now()}`,
+                    fields: configData.fields || []
+                };
+                return [...prev, newConfig];
+            }
+        });
+    };
+
+    const handleDeleteExamConfiguration = (configId: string) => {
+        setExamConfigurations(prev => prev.filter(c => c.id !== configId));
+    };
+
 
   // --- Document Management Handler ---
   const handleAttachDocument = (patientId: string, file: File) => {
@@ -383,22 +431,16 @@ function App() {
   };
 
   const handleCreatePatient = (
-    patientData: {
-      name: string;
-      dateOfBirth: string;
-      address?: string;
-      phone?: string;
-      email?: string;
-      referringEntity?: ReferringEntity;
-    },
+    patientData: NewPatientData,
     requestData: {
-      requestedExam?: any;
-      indications?: RequestIndications;
+      requestedExam?: string;
+      customFields?: { [key: string]: any };
     }
   ) => {
     const now = new Date().toISOString();
     const newPatient: Patient = {
       id: `PAT${String(Date.now()).slice(-4)}${String(patients.length + 1)}`,
+      // FIX: Spread operator was causing a type error. Using a strongly-typed object resolves it.
       ...patientData,
       age: calculateAge(patientData.dateOfBirth),
       creationDate: now,
@@ -503,7 +545,7 @@ function App() {
   // --- View Rendering Logic ---
   const renderContent = () => {
     if (selectedPatient) {
-      return <PatientDetailView patient={selectedPatient} onCloseDetailView={() => setSelectedPatient(null)} roomsConfig={ROOMS_CONFIG} onAttachDocument={handleAttachDocument} />;
+      return <PatientDetailView patient={selectedPatient} onCloseDetailView={() => setSelectedPatient(null)} roomsConfig={ROOMS_CONFIG} onAttachDocument={handleAttachDocument} examConfigurations={examConfigurations} />;
     }
     
     switch (activeView) {
@@ -535,6 +577,8 @@ function App() {
         return <StatisticsView allPatients={patients} selectedPeriod={selectedPeriod} roomsConfig={ROOMS_CONFIG} />;
       case 'administration':
         return <AdministrationView users={users} roles={roles} onSaveUser={handleSaveUser} onDeleteUser={handleDeleteUser} onSaveRole={handleSaveRole} onDeleteRole={handleDeleteRole} />;
+      case 'exam_settings':
+        return <ExamSettingsView examConfigurations={examConfigurations} onSave={handleSaveExamConfiguration} onDelete={handleDeleteExamConfiguration} />;
       default:
         return <div>Vue non trouvée</div>;
     }
@@ -559,19 +603,20 @@ function App() {
         onPeriodChange={(p) => setSelectedPeriod(p as PeriodOption)}
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        currentView={activeView}
-        onShowAdministrationView={() => { setActiveView('administration'); setSelectedPatient(null); }}
       />
       <div className="flex flex-grow overflow-hidden">
         <RoomNavigation 
           rooms={visibleRooms} 
           activeRoomId={activeRoomId} 
           currentView={activeView}
+          isUserAdmin={currentUserRole?.name === 'Administrateur(trice)'}
           onSelectRoom={(roomId) => { setActiveRoomId(roomId); setActiveView('room'); setSelectedPatient(null); }}
           onShowDailyWorklist={() => { setActiveView('daily_worklist'); setSelectedPatient(null); }}
           onShowRoomsOverview={() => { setActiveView('rooms_overview'); setSelectedPatient(null); }}
           onShowActivityFeed={() => { setActiveView('activity_feed'); setSelectedPatient(null); }}
           onShowStatisticsView={() => { setActiveView('statistics'); setSelectedPatient(null); }}
+          onShowAdministrationView={() => { setActiveView('administration'); setSelectedPatient(null); }}
+          onShowExamSettingsView={() => { setActiveView('exam_settings'); setSelectedPatient(null); }}
         />
         <main className="flex-grow p-4 sm:p-6 overflow-y-auto">
           {renderContent()}
@@ -584,6 +629,7 @@ function App() {
           onSubmit={handlePatientFormSubmit}
           patient={modalPatient}
           room={modalRoom}
+          examConfigurations={examConfigurations}
         />
       )}
       {isCreatePatientModalOpen && (
@@ -592,6 +638,7 @@ function App() {
           onClose={() => setIsCreatePatientModalOpen(false)}
           onCreatePatient={handleCreatePatient}
           allPatients={patients}
+          examConfigurations={examConfigurations}
         />
       )}
     </div>

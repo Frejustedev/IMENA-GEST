@@ -4,7 +4,9 @@ import { ListBulletIcon } from './icons/ListBulletIcon';
 import { Squares2X2Icon } from './icons/Squares2X2Icon'; 
 import { ArchiveBoxIcon } from './icons/ArchiveBoxIcon';
 import { CalendarClockIcon } from './icons/CalendarClockIcon';
-import { ChartBarIcon } from './icons/ChartBarIcon'; // Nouvelle icône
+import { ChartBarIcon } from './icons/ChartBarIcon';
+import { WrenchScrewdriverIcon } from './icons/WrenchScrewdriverIcon';
+import { Cog8ToothIcon } from './icons/Cog8ToothIcon';
 
 
 interface RoomNavigationProps {
@@ -15,7 +17,10 @@ interface RoomNavigationProps {
   onShowDailyWorklist: () => void;
   onShowRoomsOverview: () => void;
   onShowActivityFeed: () => void;
-  onShowStatisticsView: () => void; // Nouvelle prop
+  onShowStatisticsView: () => void;
+  isUserAdmin: boolean;
+  onShowAdministrationView: () => void;
+  onShowExamSettingsView: () => void;
 }
 
 export const RoomNavigation: React.FC<RoomNavigationProps> = ({ 
@@ -26,7 +31,10 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
   onShowDailyWorklist,
   onShowRoomsOverview,
   onShowActivityFeed,
-  onShowStatisticsView // Nouvelle prop
+  onShowStatisticsView,
+  isUserAdmin,
+  onShowAdministrationView,
+  onShowExamSettingsView
 }) => {
   const baseButtonClass = "w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors duration-150";
   const activeClass = "bg-sky-600 text-white shadow-md";
@@ -102,6 +110,30 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
             </button>
           ))}
         </div>
+      )}
+
+      {isUserAdmin && (
+          <div className="pt-2 mt-2 border-t border-slate-600">
+            <h3 className="text-md font-semibold text-slate-100 mb-2">Configuration</h3>
+            
+            <button
+                onClick={onShowExamSettingsView}
+                className={`${baseButtonClass} ${currentView === 'exam_settings' ? activeClass : inactiveClass}`}
+                aria-current={currentView === 'exam_settings' ? 'page' : undefined}
+            >
+                <WrenchScrewdriverIcon className={`h-5 w-5 flex-shrink-0 ${currentView === 'exam_settings' ? activeIconClass : inactiveIconClass}`} />
+                <span className="truncate">Paramètres des Examens</span>
+            </button>
+
+            <button
+                onClick={onShowAdministrationView}
+                className={`${baseButtonClass} ${currentView === 'administration' ? activeClass : inactiveClass}`}
+                aria-current={currentView === 'administration' ? 'page' : undefined}
+            >
+                <Cog8ToothIcon className={`h-5 w-5 flex-shrink-0 ${currentView === 'administration' ? activeIconClass : inactiveIconClass}`} />
+                <span className="truncate">Administration</span>
+            </button>
+          </div>
       )}
     </aside>
   );

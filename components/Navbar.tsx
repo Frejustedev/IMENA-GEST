@@ -12,8 +12,6 @@ interface NavbarProps {
   onPeriodChange: (period: PeriodOption) => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
-  currentView: ActiveView;
-  onShowAdministrationView: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -24,10 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onPeriodChange,
   searchTerm,
   onSearchChange,
-  currentView,
-  onShowAdministrationView
 }) => {
-  const isUserAdmin = currentUserRoleName === 'Administrateur(trice)';
 
   return (
     <header className="bg-slate-800 text-white p-4 shadow-md flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 no-print">
@@ -65,22 +60,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <option value="thisMonth">Ce Mois-ci</option>
               </select>
             </div>
-
-            {isUserAdmin && (
-                <button
-                    onClick={onShowAdministrationView}
-                    className={`flex items-center p-2 rounded-md text-sm font-medium transition-colors ${
-                        currentView === 'administration'
-                            ? 'bg-sky-600 text-white shadow-sm'
-                            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    }`}
-                    title="Administration"
-                    aria-current={currentView === 'administration' ? 'page' : undefined}
-                >
-                    <Cog8ToothIcon className="h-5 w-5 mr-1" />
-                    Administration
-                </button>
-            )}
             
             <div className="flex items-center space-x-3 pl-3 border-l border-slate-600">
                 <div className="text-right">

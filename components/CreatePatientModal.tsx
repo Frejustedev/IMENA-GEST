@@ -1,26 +1,20 @@
 import React, { useState, FormEvent, useEffect, ChangeEvent } from 'react';
-import { ReferringEntity, ReferringEntityType, Patient, RequestIndications } from '../types';
+import { ReferringEntity, ReferringEntityType, Patient, ExamConfiguration, NewPatientData } from '../types';
 import { calculateAge } from '../utils/dateUtils';
-import { SCINTIGRAPHY_EXAMS_LIST } from '../constants';
+import { DynamicFormField } from './forms/DynamicFormField';
 
 interface CreatePatientModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreatePatient: (
-    patientData: {
-      name: string;
-      dateOfBirth: string;
-      address?: string;
-      phone?: string;
-      email?: string;
-      referringEntity?: ReferringEntity;
-    },
+    patientData: NewPatientData,
     requestData: {
-      requestedExam?: any;
-      indications?: RequestIndications;
+      requestedExam?: string;
+      customFields?: { [key: string]: any };
     }
   ) => void;
   allPatients: Patient[];
+  examConfigurations: ExamConfiguration[];
 }
 
 export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
@@ -28,6 +22,7 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   onClose,
   onCreatePatient,
   allPatients,
+  examConfigurations,
 }) => {
   // Patient Identity State
   const [name, setName] = useState('');
@@ -44,16 +39,16 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
   const [refContactEmail, setRefContactEmail] = useState('');
 
   // Request Data State
-  const [requestData, setRequestData] = useState<any>({
-    requestedExam: '',
-    indications: { bilanExtensionInitial: false, bilanRecidive: false, bilanComparatif: false, evaluation: false, autres: '' },
-  });
+  const [requestedExam, setRequestedExam] = useState('');
+  const [customFields, setCustomFields] = useState<{ [key: string]: any }>({});
   
   // New state for optional request creation
   const [createRequestNow, setCreateRequestNow] = useState(true);
   
   // Duplicate Check State
   const [potentialDuplicates, setPotentialDuplicates] = useState<Patient[]>([]);
+
+  const selectedExamConfig = examConfigurations.find(c => c.name === requestedExam);
 
   // Calculate age effect
   useEffect(() => {
@@ -78,30 +73,23 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
       setPotentialDuplicates([]);
     }
   }, [name, dateOfBirth, allPatients]);
+  
+  // Reset custom fields when exam changes
+  useEffect(() => {
+    setCustomFields({});
+  }, [requestedExam]);
 
-  const handleRequestChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const isCheckbox = type === 'checkbox';
-    const finalValue = isCheckbox ? (e.target as HTMLInputElement).checked : value;
-    
-    if (name.startsWith('indications.')) {
-        const field = name.split('.')[1];
-        setRequestData((prev: any) => ({
-            ...prev,
-            indications: {
-                ...prev.indications,
-                [field]: finalValue
-            }
-        }));
-    } else {
-        setRequestData((prev: any) => ({ ...prev, [name]: finalValue }));
-    }
+
+  const handleCustomFieldChange = (fieldId: string, value: any) => {
+    setCustomFields(prev => ({ ...prev, [fieldId]: value }));
   };
+
 
   const clearForm = () => {
     setName(''); setDateOfBirth(''); setAddress(''); setPhone(''); setEmail('');
     setRefEntityType('doctor'); setRefName(''); setRefContactEmail(''); setRefContactNumber('');
-    setRequestData({ requestedExam: '', indications: { bilanExtensionInitial: false, bilanRecidive: false, bilanComparatif: false, evaluation: false, autres: '' } });
+    setRequestedExam('');
+    setCustomFields({});
     setCreateRequestNow(true); // Reset checkbox to default
     setPotentialDuplicates([]);
   }
@@ -112,7 +100,7 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
       alert("Le nom et la date de naissance sont obligatoires.");
       return;
     }
-    if (createRequestNow && !requestData.requestedExam) {
+    if (createRequestNow && !requestedExam) {
       alert("L'examen demandé est obligatoire lorsque vous créez une demande.");
       return;
     }
@@ -121,10 +109,10 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
       ? { type: refEntityType, name: refName, contactNumber: refContactNumber || undefined, contactEmail: refContactEmail || undefined }
       : undefined;
       
-    const patientData = { name, dateOfBirth, address: address || undefined, phone: phone || undefined, email: email || undefined, referringEntity };
+    const patientData: NewPatientData = { name, dateOfBirth, address: address || undefined, phone: phone || undefined, email: email || undefined, referringEntity };
     
     // Pass empty request data if the box is not checked
-    const finalRequestData = createRequestNow ? requestData : {};
+    const finalRequestData = createRequestNow ? { requestedExam, customFields } : {};
     
     onCreatePatient(patientData, finalRequestData);
     clearForm();
@@ -134,7 +122,6 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
 
   const commonInputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm";
   const commonLabelClass = "block text-sm font-medium text-gray-700";
-  const commonCheckboxLabelClass = "flex items-center space-x-2 text-sm text-gray-700";
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50"
@@ -211,25 +198,24 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
                         <legend className="text-md font-semibold px-1 text-slate-700">2. Détails de la Demande</legend>
                         <div>
                             <label htmlFor="requestedExam" className={commonLabelClass}>Examen demandé <span className="text-red-500">*</span></label>
-                            <select name="requestedExam" id="requestedExam" value={requestData.requestedExam} onChange={handleRequestChange} className={commonInputClass} required={createRequestNow}>
+                            <select name="requestedExam" id="requestedExam" value={requestedExam} onChange={e => setRequestedExam(e.target.value)} className={commonInputClass} required={createRequestNow}>
                                 <option value="" disabled>Sélectionner un examen...</option>
-                                {SCINTIGRAPHY_EXAMS_LIST.map(exam => ( <option key={exam} value={exam}>{exam}</option>))}
+                                {examConfigurations.map(exam => ( <option key={exam.id} value={exam.name}>{exam.name}</option>))}
                             </select>
                         </div>
 
-                        <fieldset className="border p-2 rounded-md mt-4">
-                            <legend className="text-sm font-medium text-gray-700 px-1">Indications</legend>
-                            <div className="grid grid-cols-2 gap-2 mt-1">
-                                <label className={commonCheckboxLabelClass}><input type="checkbox" name="indications.bilanExtensionInitial" checked={!!requestData.indications.bilanExtensionInitial} onChange={handleRequestChange}/><span>Bilan d'extension</span></label>
-                                <label className={commonCheckboxLabelClass}><input type="checkbox" name="indications.bilanRecidive" checked={!!requestData.indications.bilanRecidive} onChange={handleRequestChange}/><span>Bilan de récidive</span></label>
-                                <label className={commonCheckboxLabelClass}><input type="checkbox" name="indications.bilanComparatif" checked={!!requestData.indications.bilanComparatif} onChange={handleRequestChange}/><span>Bilan comparatif</span></label>
-                                <label className={commonCheckboxLabelClass}><input type="checkbox" name="indications.evaluation" checked={!!requestData.indications.evaluation} onChange={handleRequestChange}/><span>Évaluation</span></label>
-                            </div>
-                            <div className="mt-2">
-                                <label htmlFor="indications.autres" className={`${commonLabelClass} text-xs`}>Autres indications</label>
-                                <textarea name="indications.autres" id="indications.autres" value={requestData.indications.autres} onChange={handleRequestChange} className={`${commonInputClass} min-h-[40px] text-sm`} />
-                            </div>
-                        </fieldset>
+                        {selectedExamConfig && (
+                           <div className="space-y-3 mt-4 pt-3 border-t">
+                             {selectedExamConfig.fields.map(field => (
+                                 <DynamicFormField
+                                    key={field.id}
+                                    field={field}
+                                    value={customFields[field.id]}
+                                    onChange={handleCustomFieldChange}
+                                 />
+                             ))}
+                           </div>
+                        )}
                     </fieldset>
                 )}
             </div>
