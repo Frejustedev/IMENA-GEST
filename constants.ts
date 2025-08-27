@@ -1,8 +1,4 @@
-
-
-
-
-import { Room, UserRole, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom } from './types';
+import { Room, Role, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom, Permission } from './types';
 import { ClipboardListIcon } from './components/icons/ClipboardListIcon';
 import { CalendarDaysIcon } from './components/icons/CalendarDaysIcon';
 import { UsersIcon } from './components/icons/UsersIcon';
@@ -13,11 +9,31 @@ import { DocumentTextIcon } from './components/icons/DocumentTextIcon';
 import { ArchiveBoxArrowDownIcon } from './components/icons/ArchiveBoxArrowDownIcon';
 import { ArchiveBoxIcon } from './components/icons/ArchiveBoxIcon';
 
-export const USER_ROLES_CONFIG: UserRole[] = [
-  UserRole.RECEPTION,
-  UserRole.TECHNICIAN,
-  UserRole.DOCTOR,
-  UserRole.ADMIN,
+export const INITIAL_ROLES: Role[] = [
+    {
+        id: 'role_admin',
+        name: 'Administrateur(trice)',
+        permissions: [
+            'view_patients', 'edit_patients', 'create_patients', 'move_patients', 
+            'manage_appointments', 'manage_users', 'manage_roles', 'view_hot_lab', 
+            'edit_hot_lab', 'view_statistics'
+        ]
+    },
+    {
+        id: 'role_doctor',
+        name: 'Médecin',
+        permissions: ['view_patients', 'edit_patients', 'view_statistics']
+    },
+    {
+        id: 'role_technician',
+        name: 'Technicien(ne)',
+        permissions: ['view_patients', 'edit_patients', 'move_patients', 'view_hot_lab', 'edit_hot_lab']
+    },
+    {
+        id: 'role_reception',
+        name: 'Réceptionniste',
+        permissions: ['view_patients', 'create_patients', 'manage_appointments']
+    }
 ];
 
 export const SCINTIGRAPHY_EXAMS_LIST: ScintigraphyExam[] = [
@@ -282,7 +298,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Accueil et Demandes',
     description: 'Création des patients et enregistrement des demandes d\'examens.',
     icon: ClipboardListIcon,
-    allowedRoles: [UserRole.RECEPTION, UserRole.ADMIN],
+    allowedRoleIds: ['role_reception', 'role_admin'],
     nextRoomId: RoomId.APPOINTMENT,
   },
   {
@@ -290,7 +306,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Rendez-vous',
     description: 'Planification et gestion des rendez-vous.',
     icon: CalendarDaysIcon,
-    allowedRoles: [UserRole.RECEPTION, UserRole.ADMIN],
+    allowedRoleIds: ['role_reception', 'role_admin'],
     nextRoomId: RoomId.CONSULTATION,
   },
   {
@@ -298,7 +314,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Consultation',
     description: 'Consultations pré-examen avec les médecins.',
     icon: UsersIcon,
-    allowedRoles: [UserRole.DOCTOR, UserRole.ADMIN],
+    allowedRoleIds: ['role_doctor', 'role_admin'],
     nextRoomId: RoomId.INJECTION,
   },
   {
@@ -306,7 +322,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Gestion Labo Chaud', 
     description: 'Gestion des produits radiopharmaceutiques, lots et préparations.',
     icon: CubeIcon, 
-    allowedRoles: [UserRole.TECHNICIAN, UserRole.ADMIN],
+    allowedRoleIds: ['role_technician', 'role_admin'],
     nextRoomId: null, // Ce n'est plus une étape patient séquentielle.
   },
   {
@@ -314,7 +330,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Injection',
     description: 'Administration des traceurs aux patients.',
     icon: BeakerIcon, 
-    allowedRoles: [UserRole.TECHNICIAN, UserRole.DOCTOR, UserRole.ADMIN],
+    allowedRoleIds: ['role_technician', 'role_doctor', 'role_admin'],
     nextRoomId: RoomId.EXAMINATION,
   },
   {
@@ -322,7 +338,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Examen',
     description: 'Réalisation des examens de médecine nucléaire.',
     icon: CameraIcon, 
-    allowedRoles: [UserRole.TECHNICIAN, UserRole.DOCTOR, UserRole.ADMIN],
+    allowedRoleIds: ['role_technician', 'role_doctor', 'role_admin'],
     nextRoomId: RoomId.REPORT,
   },
   {
@@ -330,7 +346,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Compte Rendu',
     description: 'Rédaction et validation des comptes rendus.',
     icon: DocumentTextIcon,
-    allowedRoles: [UserRole.DOCTOR, UserRole.ADMIN],
+    allowedRoleIds: ['role_doctor', 'role_admin'],
     nextRoomId: RoomId.RETRAIT_CR_SORTIE, 
   },
   {
@@ -338,7 +354,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Retrait CR et Sortie',
     description: 'Remise du compte rendu au patient et finalisation du dossier.',
     icon: ArchiveBoxArrowDownIcon,
-    allowedRoles: [UserRole.RECEPTION, UserRole.ADMIN],
+    allowedRoleIds: ['role_reception', 'role_admin'],
     nextRoomId: RoomId.ARCHIVE,
   },
   {
@@ -346,7 +362,7 @@ export const ROOMS_CONFIG: Room[] = [
     name: 'Archives',
     description: 'Dossiers des patients archivés.',
     icon: ArchiveBoxIcon,
-    allowedRoles: [UserRole.RECEPTION, UserRole.DOCTOR, UserRole.ADMIN],
+    allowedRoleIds: ['role_reception', 'role_doctor', 'role_admin'],
     nextRoomId: null,
   }
 ];

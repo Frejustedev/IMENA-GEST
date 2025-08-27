@@ -1,11 +1,12 @@
 import React from 'react';
-import { User, PeriodOption, ActiveView, UserRole } from '../types';
+import { User, PeriodOption, ActiveView } from '../types';
 import { MagnifyingGlassIcon } from './icons/MagnifyingGlassIcon';
 import { ArrowLeftOnRectangleIcon } from './icons/ArrowLeftOnRectangleIcon';
 import { Cog8ToothIcon } from './icons/Cog8ToothIcon';
 
 interface NavbarProps {
   currentUser: User;
+  currentUserRoleName: string;
   onLogout: () => void;
   selectedPeriod: PeriodOption;
   onPeriodChange: (period: PeriodOption) => void;
@@ -17,6 +18,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   currentUser,
+  currentUserRoleName,
   onLogout,
   selectedPeriod,
   onPeriodChange,
@@ -25,8 +27,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onShowAdministrationView
 }) => {
+  const isUserAdmin = currentUserRoleName === 'Administrateur(trice)';
+
   return (
-    <header className="bg-slate-800 text-white p-4 shadow-md flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+    <header className="bg-slate-800 text-white p-4 shadow-md flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 no-print">
       <h1 className="text-2xl font-bold tracking-tight text-center sm:text-left">
         Gestion Parcours Patient MN
       </h1>
@@ -62,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
-            {currentUser.role === UserRole.ADMIN && (
+            {isUserAdmin && (
                 <button
                     onClick={onShowAdministrationView}
                     className={`flex items-center p-2 rounded-md text-sm font-medium transition-colors ${
@@ -81,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center space-x-3 pl-3 border-l border-slate-600">
                 <div className="text-right">
                     <p className="font-semibold text-white text-sm truncate" title={currentUser.name}>{currentUser.name}</p>
-                    <p className="text-xs text-sky-300">{currentUser.role}</p>
+                    <p className="text-xs text-sky-300">{currentUserRoleName}</p>
                 </div>
                 <button
                     onClick={onLogout}

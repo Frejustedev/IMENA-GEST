@@ -14,18 +14,17 @@ import { HotLabView } from './components/HotLabView';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { AdministrationView } from './components/AdministrationView';
-// FIX: Import TracerLot and PreparationLog to fix type errors in Hot Lab data handlers.
 import { 
-  Patient, Room, UserRole, RoomId, PatientStatusInRoom, PatientHistoryEntry, 
+  Patient, Room, RoomId, PatientStatusInRoom, PatientHistoryEntry, 
   PeriodOption, ActiveView, HotLabData, User, TracerLot, PreparationLog,
-  ReferringEntity, RequestIndications
+  ReferringEntity, RequestIndications, PatientDocument, Role
 } from './types';
-import { ROOMS_CONFIG, INITIAL_PATIENTS, INITIAL_HOT_LAB_DATA } from './constants';
-import { calculateTimeDiff, formatDuration } from './utils/delayUtils';
+import { ROOMS_CONFIG, INITIAL_PATIENTS, INITIAL_HOT_LAB_DATA, INITIAL_ROLES } from './constants';
 import { calculateAge } from './utils/dateUtils';
 
 // --- Auth Service (simulated with localStorage) ---
 const USERS_STORAGE_KEY = 'gestion_patient_mn_users';
+const ROLES_STORAGE_KEY = 'gestion_patient_mn_roles';
 const SESSION_STORAGE_KEY = 'gestion_patient_mn_session';
 
 const getInitialUsers = (): User[] => {
@@ -39,7 +38,7 @@ const getInitialUsers = (): User[] => {
       name: 'Admin Principal',
       email: 'admin@mn.com',
       passwordHash: 'admin123', // PLAIN TEXT for this simulation
-      role: UserRole.ADMIN,
+      roleId: 'role_admin',
     };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([initialAdmin]));
     return [initialAdmin];
@@ -49,32 +48,21 @@ const getInitialUsers = (): User[] => {
   }
 };
 
-const authService = {
-  login: (email: string, password: string): User | null => {
-    const users = getInitialUsers();
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === password);
-    if (user) {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
-      return user;
+const getInitialRoles = (): Role[] => {
+    try {
+        const savedRoles = localStorage.getItem(ROLES_STORAGE_KEY);
+        if (savedRoles) return JSON.parse(savedRoles);
+        localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(INITIAL_ROLES));
+        return INITIAL_ROLES;
+    } catch (error) {
+        console.error("Erreur lors de l'initialisation des rôles:", error);
+        return [];
     }
-    return null;
-  },
-  register: (name: string, email: string, password: string, role: UserRole): { success: boolean, message?: string, user?: User } => {
-    const users = getInitialUsers();
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      return { success: false, message: "Un utilisateur avec cet email existe déjà." };
-    }
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      name,
-      email,
-      passwordHash: password, // Not hashed in this simulation
-      role
-    };
-    const updatedUsers = [...users, newUser];
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
-    return { success: true, user: newUser };
+};
+
+const sessionService = {
+  login: (user: User) => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
   },
   logout: () => {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
@@ -90,6 +78,7 @@ const authService = {
   }
 };
 
+
 // --- Main App Component ---
 function App() {
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS.map(p => ({...p, age: calculateAge(p.dateOfBirth)})));
@@ -103,35 +92,145 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [hotLabData, setHotLabData] = useState<HotLabData>(INITIAL_HOT_LAB_DATA);
 
-  // --- Auth State ---
-  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
+  // --- Auth & Roles State ---
+  const [users, setUsers] = useState<User[]>(getInitialUsers);
+  const [roles, setRoles] = useState<Role[]>(getInitialRoles);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => sessionService.getCurrentUser());
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
+
+  // Persist users and roles to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(roles));
+  }, [roles]);
+
 
   // --- Authentication Handlers ---
   const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    const user = authService.login(email, password);
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === password);
     if (user) {
+      sessionService.login(user);
       setCurrentUser(user);
       return true;
     }
     return false;
   };
   
-  const handleRegister = async (name: string, email: string, password: string, role: UserRole): Promise<{ success: boolean; message?: string }> => {
-    const result = authService.register(name, email, password, role);
-    if (result.success && result.user) {
-      setCurrentUser(result.user);
+  const handleRegister = async (name: string, email: string, password: string, roleId: string): Promise<{ success: boolean; message?: string }> => {
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      return { success: false, message: "Un utilisateur avec cet email existe déjà." };
     }
-    return result;
+    const newUser: User = {
+      id: `user_${Date.now()}`,
+      name,
+      email,
+      passwordHash: password,
+      roleId
+    };
+    setUsers(prev => [...prev, newUser]);
+    sessionService.login(newUser);
+    setCurrentUser(newUser);
+    return { success: true };
   };
   
   const handleLogout = () => {
-    authService.logout();
+    sessionService.logout();
     setCurrentUser(null);
   };
+
+  // --- User Management Handlers ---
+  const handleSaveUser = (userData: User | Omit<User, 'id'>) => {
+    setUsers(prevUsers => {
+      if ('id' in userData && userData.id) {
+        // Edit existing user
+        return prevUsers.map(u => u.id === userData.id ? { ...u, ...userData, passwordHash: userData.passwordHash || u.passwordHash } : u);
+      } else {
+        // Add new user
+        const newUser: User = {
+          ...userData,
+          id: `user_${Date.now()}`,
+          passwordHash: userData.passwordHash || 'password', // Fallback, should be required by form
+          roleId: userData.roleId!
+        };
+        return [...prevUsers, newUser];
+      }
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (currentUser?.id === userId) {
+      alert("Vous ne pouvez pas supprimer votre propre compte.");
+      return;
+    }
+    setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+  };
   
+  // --- Role Management Handlers ---
+  const handleSaveRole = (roleData: Role | Omit<Role, 'id'>) => {
+    setRoles(prevRoles => {
+        if ('id' in roleData && roleData.id) {
+            // Edit existing role
+            return prevRoles.map(r => r.id === roleData.id ? { ...r, ...roleData } : r);
+        } else {
+            // Add new role
+            const newRole: Role = {
+                ...roleData,
+                id: `role_${Date.now()}`,
+                permissions: roleData.permissions || [],
+            };
+            return [...prevRoles, newRole];
+        }
+    });
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+      if (users.some(user => user.roleId === roleId)) {
+          alert("Ce rôle est assigné à des utilisateurs et ne peut pas être supprimé.");
+          return;
+      }
+      setRoles(prevRoles => prevRoles.filter(r => r.id !== roleId));
+  };
+
+  // --- Document Management Handler ---
+  const handleAttachDocument = (patientId: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (readEvent) => {
+        const dataUrl = readEvent.target?.result as string;
+        if (dataUrl) {
+            const newDocument: PatientDocument = {
+                id: `doc_${Date.now()}`,
+                name: file.name,
+                fileType: file.type,
+                uploadDate: new Date().toISOString(),
+                dataUrl,
+            };
+            setPatients(prevPatients => prevPatients.map(p => {
+                if (p.id === patientId) {
+                    const updatedDocuments = [...(p.documents || []), newDocument];
+                    return { ...p, documents: updatedDocuments };
+                }
+                return p;
+            }));
+        }
+    };
+    reader.onerror = (error) => {
+        console.error("Erreur de lecture du fichier:", error);
+        alert("Une erreur est survenue lors de la lecture du fichier.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+
   // --- Derived State and Data Filtering ---
-  const visibleRooms = ROOMS_CONFIG.filter(room => currentUser && room.allowedRoles.includes(currentUser.role));
+  const currentUserRole = roles.find(r => r.id === currentUser?.roleId);
+  const currentUserRoleName = currentUserRole?.name || 'N/A';
+  
+  const visibleRooms = ROOMS_CONFIG.filter(room => 
+      currentUserRole && room.allowedRoleIds.includes(currentUserRole.id)
+  );
   
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
@@ -404,7 +503,7 @@ function App() {
   // --- View Rendering Logic ---
   const renderContent = () => {
     if (selectedPatient) {
-      return <PatientDetailView patient={selectedPatient} onCloseDetailView={() => setSelectedPatient(null)} roomsConfig={ROOMS_CONFIG} />;
+      return <PatientDetailView patient={selectedPatient} onCloseDetailView={() => setSelectedPatient(null)} roomsConfig={ROOMS_CONFIG} onAttachDocument={handleAttachDocument} />;
     }
     
     switch (activeView) {
@@ -433,9 +532,9 @@ function App() {
       case 'activity_feed':
         return <ActivityFeedView allPatients={patients} selectedPeriod={selectedPeriod} onViewPatientDetail={setSelectedPatient} roomsConfig={ROOMS_CONFIG}/>;
       case 'statistics':
-        return <StatisticsView allPatients={patients} selectedPeriod={selectedPeriod} roomsConfig={ROOMS_CONFIG} calculateTimeDiff={calculateTimeDiff} formatDuration={formatDuration} />;
+        return <StatisticsView allPatients={patients} selectedPeriod={selectedPeriod} roomsConfig={ROOMS_CONFIG} />;
       case 'administration':
-        return <AdministrationView />;
+        return <AdministrationView users={users} roles={roles} onSaveUser={handleSaveUser} onDeleteUser={handleDeleteUser} onSaveRole={handleSaveRole} onDeleteRole={handleDeleteRole} />;
       default:
         return <div>Vue non trouvée</div>;
     }
@@ -447,13 +546,14 @@ function App() {
   if (!currentUser) {
     return authView === 'login' 
       ? <LoginPage onLogin={handleLogin} onSwitchToRegister={() => setAuthView('register')} />
-      : <RegisterPage onRegister={handleRegister} onSwitchToLogin={() => setAuthView('login')} />;
+      : <RegisterPage onRegister={handleRegister} onSwitchToLogin={() => setAuthView('login')} roles={roles}/>;
   }
 
   return (
     <div className="h-screen flex flex-col bg-slate-200">
       <Navbar 
         currentUser={currentUser}
+        currentUserRoleName={currentUserRoleName}
         onLogout={handleLogout}
         selectedPeriod={selectedPeriod} 
         onPeriodChange={(p) => setSelectedPeriod(p as PeriodOption)}

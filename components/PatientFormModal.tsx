@@ -9,6 +9,7 @@ import { RequestForm } from './forms/RequestForm';
 import { AppointmentForm } from './forms/AppointmentForm';
 import { InjectionForm } from './forms/InjectionForm';
 import { ExaminationForm } from './forms/ExaminationForm';
+import { ReportForm } from './forms/ReportForm';
 import { RetraitCRSortieForm } from './forms/RetraitCRSortieForm';
 
 interface PatientFormModalProps {
@@ -69,6 +70,17 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           onClose={onClose}
           patient={patient}
           initialData={patient.roomSpecificData?.[RoomId.EXAMINATION]}
+          onSubmit={(data) => onSubmit(patient.id, room.id, data)}
+        />
+      );
+
+    case RoomId.REPORT:
+      return (
+        <ReportForm
+          isOpen={isOpen}
+          onClose={onClose}
+          patient={patient}
+          initialData={patient.roomSpecificData?.[RoomId.REPORT]}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
         />
       );

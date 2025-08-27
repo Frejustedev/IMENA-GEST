@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Room, RoomId, ActiveView } from '../types';
 import { ListBulletIcon } from './icons/ListBulletIcon';
@@ -67,7 +66,7 @@ export const RoomNavigation: React.FC<RoomNavigationProps> = ({
   ];
 
   return (
-    <aside className="w-72 bg-slate-700 text-slate-200 p-4 space-y-1.5 overflow-y-auto flex-shrink-0">
+    <aside className="w-72 bg-slate-700 text-slate-200 p-4 space-y-1.5 overflow-y-auto flex-shrink-0 no-print">
       <h2 className="text-lg font-semibold text-slate-100 mb-2 border-b border-slate-600 pb-2">Navigation Principale</h2>
       
       {navItems.map(item => (

@@ -1,10 +1,34 @@
 import React from 'react';
 
-export enum UserRole {
-  RECEPTION = 'Réceptionniste',
-  TECHNICIAN = 'Technicien(ne)',
-  DOCTOR = 'Médecin',
-  ADMIN = 'Administrateur(trice)',
+export type Permission = 
+  | 'view_patients'
+  | 'edit_patients'
+  | 'create_patients'
+  | 'move_patients'
+  | 'manage_appointments'
+  | 'manage_users'
+  | 'manage_roles'
+  | 'view_hot_lab'
+  | 'edit_hot_lab'
+  | 'view_statistics';
+
+export const ALL_PERMISSIONS: { id: Permission, label: string }[] = [
+    { id: 'view_patients', label: 'Voir les patients' },
+    { id: 'edit_patients', label: 'Modifier les patients' },
+    { id: 'create_patients', label: 'Créer des patients' },
+    { id: 'move_patients', label: 'Déplacer les patients' },
+    { id: 'manage_appointments', label: 'Gérer les rendez-vous' },
+    { id: 'manage_users', label: 'Gérer les utilisateurs' },
+    { id: 'manage_roles', label: 'Gérer les rôles' },
+    { id: 'view_hot_lab', label: 'Voir le labo chaud' },
+    { id: 'edit_hot_lab', label: 'Modifier le labo chaud' },
+    { id: 'view_statistics', label: 'Voir les statistiques' },
+];
+
+export interface Role {
+    id: string;
+    name: string;
+    permissions: Permission[];
 }
 
 export enum RoomId {
@@ -669,6 +693,14 @@ export interface RequestIndications {
   autres?: string;
 }
 
+export interface PatientDocument {
+  id: string;
+  name: string;
+  fileType: string;
+  uploadDate: string;
+  dataUrl: string; // base64 encoded file with MIME type
+}
+
 export interface Patient {
   id: string;
   name: string;
@@ -682,6 +714,7 @@ export interface Patient {
   currentRoomId: RoomId;
   statusInRoom: PatientStatusInRoom;
   history: PatientHistoryEntry[];
+  documents?: PatientDocument[];
   roomSpecificData?: {
     [RoomId.REQUEST]?: {
       requestedExam?: ScintigraphyExam;
@@ -775,7 +808,7 @@ export interface Room {
   name: string;
   description: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
-  allowedRoles: UserRole[];
+  allowedRoleIds: string[];
   nextRoomId: RoomId | null;
 }
 
@@ -784,7 +817,7 @@ export interface User {
     name: string;
     email: string;
     passwordHash: string; // In a real app, this should be a hash.
-    role: UserRole;
+    roleId: string;
 }
 
 export type TimelineEventType = 'appointment' | 'injection' | 'examination';

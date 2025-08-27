@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Patient, Room, RoomId, PatientHistoryEntry } from '../types'; 
 import { ROOMS_CONFIG } from '../constants';
 import { UserCircleIcon } from './icons/UserCircleIcon';
@@ -9,12 +9,16 @@ import { BoneScintigraphyDataView } from './forms/BoneScintigraphyDataView';
 import { ParathyroidScintigraphyDataView } from './forms/ParathyroidScintigraphyDataView';
 import { RenalDMSADataView } from './forms/RenalDMSADataView';
 import { RenalDTPAMAG3DataView } from './forms/RenalDTPAMAG3DataView';
+import { PrinterIcon } from './icons/PrinterIcon';
+import { PaperClipIcon } from './icons/PaperClipIcon';
+import { DocumentDuplicateIcon } from './icons/DocumentDuplicateIcon';
 
 
 interface PatientDetailViewProps {
   patient: Patient;
   onCloseDetailView: () => void;
   roomsConfig: Room[];
+  onAttachDocument: (patientId: string, file: File) => void;
 }
 
 // Helper function to format field keys for display
@@ -40,8 +44,20 @@ const findTimeFromHistory = (history: PatientHistoryEntry[], roomId: RoomId, typ
 };
 
 
-export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, onCloseDetailView, roomsConfig }) => {
+export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, onCloseDetailView, roomsConfig, onAttachDocument }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const patientAgeDisplay = patient.age !== undefined ? ` (${patient.age} ans)` : '';
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+        const file = event.target.files[0];
+        onAttachDocument(patient.id, file);
+        // Clear the input value to allow selecting the same file again
+        event.target.value = '';
+    }
+  };
+
 
   const delaySegments = [
     { startRoom: RoomId.CONSULTATION, endRoom: RoomId.INJECTION, label: "Consultation → Injection" },
@@ -94,7 +110,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
   const specializedDataComponent = renderSpecializedData();
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-2xl animate-fadeIn">
+    <div className="bg-white p-6 rounded-xl shadow-2xl animate-fadeIn printable-content">
       <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
         <div className="flex items-center space-x-3">
           <UserCircleIcon className="h-12 w-12 text-sky-600" />
@@ -103,12 +119,21 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
             <p className="text-sm text-slate-500">ID: {patient.id} - Né(e) le: {patient.dateOfBirth}{patientAgeDisplay}</p>
           </div>
         </div>
-        <button
-          onClick={onCloseDetailView}
-          className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md shadow-sm transition-colors"
-        >
-          &larr; Retour
-        </button>
+        <div className="flex items-center space-x-2 no-print">
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md shadow-sm transition-colors flex items-center"
+            >
+              <PrinterIcon className="h-5 w-5 mr-2" />
+              Imprimer le dossier
+            </button>
+            <button
+              onClick={onCloseDetailView}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md shadow-sm transition-colors"
+            >
+              &larr; Retour
+            </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -144,8 +169,40 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
           </div>
         </div>
       </div>
+      
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-slate-700 mb-4 border-b pb-2">Documents Attachés</h3>
+        <div className="bg-slate-50 p-4 rounded-lg shadow-inner">
+            <ul className="space-y-2">
+                {(patient.documents || []).map(doc => (
+                    <li key={doc.id} className="flex items-center justify-between p-2 bg-white rounded-md border">
+                        <div className="flex items-center space-x-2">
+                            <DocumentDuplicateIcon className="h-5 w-5 text-slate-500"/>
+                            <a href={doc.dataUrl} download={doc.name} className="text-sm font-medium text-sky-600 hover:underline" title="Télécharger le document">
+                                {doc.name}
+                            </a>
+                        </div>
+                        <span className="text-xs text-slate-400">{new Date(doc.uploadDate).toLocaleDateString('fr-FR')}</span>
+                    </li>
+                ))}
+            </ul>
+            {(!patient.documents || patient.documents.length === 0) && (
+                <p className="text-sm text-slate-500 italic text-center">Aucun document attaché.</p>
+            )}
+            <div className="mt-4 text-center no-print">
+                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 px-4 rounded-md text-sm transition-colors duration-150 shadow-sm"
+                >
+                    <PaperClipIcon className="h-5 w-5 mr-2" />
+                    Attacher un fichier
+                </button>
+            </div>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print-break-before">
         <div>
             <h3 className="text-xl font-semibold text-slate-700 mb-4 border-b pb-2">Frise Chronologique du Parcours</h3>
             {timelineEntries.length === 0 ? (
@@ -157,7 +214,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
                     const Icon = room ? room.icon : DocumentTextIcon;
 
                     return (
-                    <div key={index} className="mb-8 relative last:mb-0">
+                    <div key={index} className="mb-8 relative last:mb-0 print:break-inside-avoid">
                         <div className="absolute -left-[23px] top-1 flex items-center justify-center bg-white">
                         <span className="h-10 w-10 rounded-full bg-sky-500 text-white flex items-center justify-center ring-4 ring-white">
                             <Icon className="h-5 w-5" />
@@ -180,7 +237,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
 
         <div>
             <h3 className="text-xl font-semibold text-slate-700 mb-4 border-b pb-2">Données Spécifiques par Salle</h3>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 print:max-h-full print:overflow-visible">
                 {specializedDataComponent}
 
                 {roomsConfig.map(room => {
@@ -190,7 +247,7 @@ export const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patient, o
                   if (!roomData || Object.keys(roomData).length === 0) return null;
                   
                   return (
-                      <div key={room.id} className="p-4 bg-slate-50 rounded-lg shadow-inner">
+                      <div key={room.id} className="p-4 bg-slate-50 rounded-lg shadow-inner print:break-inside-avoid">
                       <h4 className="text-md font-semibold text-sky-600 mb-2">{room.name}</h4>
                       <dl className="space-y-1 text-xs text-slate-600">
                           {Object.entries(roomData as Record<string, any>).map(([key, value]) => {

@@ -1,6 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { UserRole } from '../types';
-import { USER_ROLES_CONFIG } from '../constants';
+import { Role } from '../types';
 import { AtSymbolIcon } from './icons/AtSymbolIcon';
 import { LockClosedIcon } from './icons/LockClosedIcon';
 import { UserCircleIcon } from './icons/UserCircleIcon';
@@ -8,34 +7,40 @@ import { IdentificationIcon } from './icons/IdentificationIcon';
 import { BeakerIcon } from './icons/BeakerIcon';
 
 interface RegisterPageProps {
-  onRegister: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; message?: string }>;
+  onRegister: (name: string, email: string, password: string, roleId: string) => Promise<{ success: boolean; message?: string }>;
   onSwitchToLogin: () => void;
+  roles: Role[];
 }
 
-export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onSwitchToLogin }) => {
+export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onSwitchToLogin, roles }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.TECHNICIAN);
+  const [roleId, setRoleId] = useState<string>('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const availableRoles = USER_ROLES_CONFIG.filter(r => r !== UserRole.ADMIN);
+  const availableRoles = roles.filter(r => r.name !== 'Administrateur(trice)');
+  
+  // Set default roleId if not already set and availableRoles is populated
+  if (!roleId && availableRoles.length > 0) {
+      setRoleId(availableRoles[0].id);
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || !roleId) {
         setError("Veuillez remplir tous les champs.");
         return;
     }
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError("Les mots de passe не correspondent pas.");
       return;
     }
     setError('');
     setIsLoading(true);
-    const result = await onRegister(name, email, password, role);
+    const result = await onRegister(name, email, password, roleId);
     setIsLoading(false);
     if (!result.success) {
       setError(result.message || "Erreur lors de l'inscription.");
@@ -106,9 +111,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister, onSwitch
                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <IdentificationIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
-                <select id="role" name="role" value={role} onChange={(e) => setRole(e.target.value as UserRole)} required
+                <select id="role" name="role" value={roleId} onChange={(e) => setRoleId(e.target.value)} required
                     className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm pl-10">
-                    {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                    {availableRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
             </div>
           </div>
