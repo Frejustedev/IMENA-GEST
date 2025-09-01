@@ -2,7 +2,8 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { Patient } from '../../types';
 import { ArchiveBoxArrowDownIcon } from '../icons/ArchiveBoxArrowDownIcon';
 
-interface RetraitCRSortieFormData {
+// FIX: Export interface for use in other components.
+export interface RetraitCRSortieFormData {
   dateRetrait?: string;
   heureRetrait?: string;
   retirePar?: string;

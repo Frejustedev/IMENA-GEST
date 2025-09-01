@@ -3,7 +3,8 @@ import { Patient, ExamConfiguration } from '../../types';
 import { UsersIcon } from '../icons/UsersIcon';
 import { DynamicFormField } from './DynamicFormField';
 
-interface ConsultationFormData {
+// FIX: Export interface for use in other components.
+export interface ConsultationFormData {
   customFields?: { [key: string]: any };
 }
 

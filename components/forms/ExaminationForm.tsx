@@ -2,7 +2,8 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { Patient } from '../../types';
 import { CameraIcon } from '../icons/CameraIcon';
 
-interface ExaminationFormData {
+// FIX: Export interface for use in other components.
+export interface ExaminationFormData {
   parametresExamen?: string;
   commentairesTechnicien?: string;
   qualiteImages?: 'Excellente' | 'Bonne' | 'Moyenne' | 'Médiocre' | '';

@@ -4,7 +4,8 @@ import { Patient, ExamConfiguration } from '../../types';
 import { ClipboardListIcon } from '../icons/ClipboardListIcon';
 import { DynamicFormField } from './DynamicFormField';
 
-interface RequestFormData {
+// FIX: Export interface for use in other components.
+export interface RequestFormData {
   requestedExam?: string;
   customFields?: { [key: string]: any };
 }

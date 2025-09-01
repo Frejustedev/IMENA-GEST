@@ -10,7 +10,8 @@ import RichTextEditor, { RichTextEditorRef } from '../RichTextEditor';
 import { QUICK_PHRASES } from '../../reportConstants';
 import { DynamicFormField } from './DynamicFormField';
 
-interface ReportFormData {
+// FIX: Export interface for use in other components.
+export interface ReportFormData {
   texteCompteRendu?: string;
   conclusionCr?: string;
   customFields?: { [key: string]: any };

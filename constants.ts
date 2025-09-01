@@ -1,4 +1,4 @@
-import { Room, Role, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom, Permission, ExamConfiguration, ReportTemplate } from './types';
+import { Room, Role, RoomId, ScintigraphyExam, RadiopharmaceuticalProduct, HotLabData, Patient, PatientStatusInRoom, Permission, ExamConfiguration, ReportTemplate, Asset, StockItem } from './types';
 import { ClipboardListIcon } from './components/icons/ClipboardListIcon';
 import { CalendarDaysIcon } from './components/icons/CalendarDaysIcon';
 import { UsersIcon } from './components/icons/UsersIcon';
@@ -434,5 +434,47 @@ export const INITIAL_REPORT_TEMPLATES: ReportTemplate[] = [
           <p>Les contours sont réguliers, la taille de la glande est estimée normale.</p>
       `,
       conclusionContent: "<p>Scintigraphie thyroïdienne d'aspect normal.</p>"
+    }
+];
+
+export const INITIAL_ASSETS: Asset[] = [
+    { id: 'ASSET001', family: 'Informatique', designation: 'Switch SCISCO SG350-28P', serialNumber: 'DNI241806TQ', quantity: 1, acquisitionYear: 2022, isFunctional: true, currentAction: 'En service', acquisitionCost: 500 },
+    { id: 'ASSET002', family: 'Mobilier', designation: 'Fauteuil de bureau', quantity: 5, acquisitionYear: 2015, isFunctional: true, currentAction: 'En service', acquisitionCost: 150 },
+    { id: 'ASSET003', family: 'Climatisation', designation: 'Climatiseur 3CV NASCO', quantity: 1, acquisitionYear: 2015, isFunctional: false, currentAction: 'En réparation' },
+    { id: 'ASSET004', family: 'Groupe électrogène', designation: 'Groupe électrogène CUMMINS 44KVA', serialNumber: 'C44D5C141204362', quantity: 1, acquisitionYear: 2015, isFunctional: true, currentAction: 'En service' },
+];
+
+export const INITIAL_STOCK_ITEMS: StockItem[] = [
+    { 
+        id: 'STOCK01', 
+        designation: 'Ramette Papier A4', 
+        unit: 'ramette',
+        currentStock: 50, 
+        unitPrice: 5, 
+        movements: [
+            { id: 'MVT01', date: '2024-07-01T10:00:00Z', type: 'Entrée', quantity: 100, unitPrice: 5, documentRef: 'BE-2024-001', ordonnateur: 'Admin Initial' },
+            { id: 'MVT02', date: '2024-07-15T14:00:00Z', type: 'Sortie', quantity: 50, unitPrice: 5, documentRef: 'BC-2024-015', destinationOrSource: 'Service Radiologie' },
+        ]
+    },
+    { 
+        id: 'STOCK02', 
+        designation: 'Cartouche encre Noire HP 953XL', 
+        unit: 'pièce',
+        currentStock: 10, 
+        unitPrice: 45, 
+        movements: [
+            { id: 'MVT03', date: '2024-06-20T09:00:00Z', type: 'Entrée', quantity: 20, unitPrice: 45, documentRef: 'BE-2024-001', ordonnateur: 'Admin Initial' },
+            { id: 'MVT04', date: '2024-07-20T11:00:00Z', type: 'Sortie', quantity: 10, unitPrice: 45, documentRef: 'BC-2024-018', destinationOrSource: 'Secrétariat' },
+        ]
+    },
+    {
+        id: 'STOCK03',
+        designation: 'Seringue 5ml',
+        unit: 'boîte',
+        currentStock: 20,
+        unitPrice: 15,
+        movements: [
+            { id: 'MVT05', date: '2024-07-10T09:00:00Z', type: 'Entrée', quantity: 20, unitPrice: 15, documentRef: 'BE-2024-002', ordonnateur: 'Admin Initial' }
+        ]
     }
 ];

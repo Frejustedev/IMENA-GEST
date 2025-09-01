@@ -2,7 +2,8 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { Patient } from '../../types';
 import { CalendarDaysIcon } from '../icons/CalendarDaysIcon';
 
-interface AppointmentFormData {
+// FIX: Export interface for use in other components.
+export interface AppointmentFormData {
   dateRdv?: string;
   heureRdv?: string;
   consignesSpecifiques?: string;

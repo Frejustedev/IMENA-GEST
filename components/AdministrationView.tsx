@@ -10,10 +10,10 @@ import { RoleFormModal } from './RoleFormModal';
 interface AdministrationViewProps {
   users: User[];
   roles: Role[];
-  onSaveUser: (user: User | Omit<User, 'id'>) => void;
+  onSaveUser: (user: User | Omit<User, 'id'>) => Promise<void>;
   onDeleteUser: (userId: string) => void;
-  onSaveRole: (role: Role | Omit<Role, 'id'>) => void;
-  onDeleteRole: (roleId: string) => void;
+  onSaveRole: (role: Role | Omit<Role, 'id'>) => Promise<void>;
+  onDeleteRole: (role: Role) => void;
 }
 
 export const AdministrationView: React.FC<AdministrationViewProps> = ({ 
@@ -38,12 +38,6 @@ export const AdministrationView: React.FC<AdministrationViewProps> = ({
     setEditingUser(user);
     setIsUserModalOpen(true);
   };
-
-  const handleDeleteUserClick = (userId: string, userName: string) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${userName} ? Cette action est irréversible.`)) {
-      onDeleteUser(userId);
-    }
-  };
   
   const handleOpenAddRoleModal = () => {
     setEditingRole(null);
@@ -60,9 +54,7 @@ export const AdministrationView: React.FC<AdministrationViewProps> = ({
         alert("Le rôle Administrateur ne peut pas être supprimé.");
         return;
     }
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le rôle "${role.name}" ? Cette action est irréversible.`)) {
-      onDeleteRole(role.id);
-    }
+    onDeleteRole(role);
   };
 
   const getRoleName = (roleId: string) => roles.find(r => r.id === roleId)?.name || 'N/A';
@@ -112,7 +104,7 @@ export const AdministrationView: React.FC<AdministrationViewProps> = ({
                                 <PencilIcon className="h-5 w-5"/>
                             </button>
                             {getRoleName(user.roleId) !== 'Administrateur(trice)' && (
-                                <button onClick={() => handleDeleteUserClick(user.id, user.name)} className="text-red-600 hover:text-red-900 p-1" title="Supprimer">
+                                <button onClick={() => onDeleteUser(user.id)} className="text-red-600 hover:text-red-900 p-1" title="Supprimer">
                                     <TrashIcon className="h-5 w-5"/>
                                 </button>
                             )}

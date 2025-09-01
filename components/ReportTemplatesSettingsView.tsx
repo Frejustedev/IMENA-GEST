@@ -9,8 +9,8 @@ import { SCINTIGRAPHY_EXAMS_LIST } from '../constants';
 
 interface ReportTemplatesSettingsViewProps {
   reportTemplates: ReportTemplate[];
-  onSave: (template: ReportTemplate | Omit<ReportTemplate, 'id'>) => void;
-  onDelete: (templateId: string) => void;
+  onSave: (template: ReportTemplate | Omit<ReportTemplate, 'id'>) => Promise<void>;
+  onDelete: (template: ReportTemplate) => void;
 }
 
 export const ReportTemplatesSettingsView: React.FC<ReportTemplatesSettingsViewProps> = ({ reportTemplates, onSave, onDelete }) => {
@@ -26,11 +26,10 @@ export const ReportTemplatesSettingsView: React.FC<ReportTemplatesSettingsViewPr
     setEditingTemplate(template);
     setIsModalOpen(true);
   };
-
-  const handleDelete = (template: ReportTemplate) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le modèle "${template.name}" ?`)) {
-      onDelete(template.id);
-    }
+  
+  const handleSave = async (template: ReportTemplate | Omit<ReportTemplate, 'id'>) => {
+      await onSave(template);
+      setIsModalOpen(false);
   };
 
   const templatesByExam = useMemo(() => {
@@ -71,7 +70,7 @@ export const ReportTemplatesSettingsView: React.FC<ReportTemplatesSettingsViewPr
                                    <p className="text-sm font-medium text-slate-800">{template.name}</p>
                                    <div className="space-x-2">
                                        <button onClick={() => handleEdit(template)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Modifier"><PencilIcon className="h-5 w-5" /></button>
-                                       <button onClick={() => handleDelete(template)} className="text-red-600 hover:text-red-900 p-1" title="Supprimer"><TrashIcon className="h-5 w-5" /></button>
+                                       <button onClick={() => onDelete(template)} className="text-red-600 hover:text-red-900 p-1" title="Supprimer"><TrashIcon className="h-5 w-5" /></button>
                                    </div>
                                </li>
                            ))}
@@ -87,7 +86,7 @@ export const ReportTemplatesSettingsView: React.FC<ReportTemplatesSettingsViewPr
       <ReportTemplateFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={onSave}
+        onSubmit={handleSave}
         initialData={editingTemplate}
       />
     </div>

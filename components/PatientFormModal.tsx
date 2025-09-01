@@ -1,12 +1,13 @@
 import React from 'react';
 import { Patient, Room, RoomId, ExamConfiguration, ReportTemplate } from '../types';
-import { RequestForm } from './forms/RequestForm';
-import { AppointmentForm } from './forms/AppointmentForm';
-import { ConsultationForm } from './forms/ConsultationForm';
+// FIX: Import form data types to resolve casting errors.
+import { RequestForm, RequestFormData } from './forms/RequestForm';
+import { AppointmentForm, AppointmentFormData } from './forms/AppointmentForm';
+import { ConsultationForm, ConsultationFormData } from './forms/ConsultationForm';
 import { InjectionForm } from './forms/InjectionForm';
-import { ExaminationForm } from './forms/ExaminationForm';
-import { ReportForm } from './forms/ReportForm';
-import { RetraitCRSortieForm } from './forms/RetraitCRSortieForm';
+import { ExaminationForm, ExaminationFormData } from './forms/ExaminationForm';
+import { ReportForm, ReportFormData } from './forms/ReportForm';
+import { RetraitCRSortieForm, RetraitCRSortieFormData } from './forms/RetraitCRSortieForm';
 
 interface PatientFormModalProps {
   isOpen: boolean;
@@ -37,7 +38,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           patient={patient}
-          initialData={patient.roomSpecificData?.[RoomId.REQUEST]}
+          // FIX: Cast initialData to RequestFormData to resolve type mismatch.
+          initialData={patient.roomSpecificData?.[RoomId.REQUEST] as RequestFormData}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
           examConfigurations={examConfigurations}
         />
@@ -49,7 +51,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           patient={patient}
-          initialData={patient.roomSpecificData?.[RoomId.APPOINTMENT]}
+          // FIX: Cast initialData to AppointmentFormData to resolve type mismatch.
+          initialData={patient.roomSpecificData?.[RoomId.APPOINTMENT] as AppointmentFormData}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
         />
       );
@@ -72,7 +75,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
                 isOpen={isOpen}
                 onClose={onClose}
                 patient={patient}
-                initialData={patient.roomSpecificData?.[RoomId.CONSULTATION]}
+                // FIX: Cast initialData to ConsultationFormData to resolve type mismatch.
+                initialData={patient.roomSpecificData?.[RoomId.CONSULTATION] as ConsultationFormData}
                 onSubmit={(data) => onSubmit(patient.id, room.id, data)}
                 examConfiguration={examConfig}
             />
@@ -94,7 +98,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           patient={patient}
-          initialData={patient.roomSpecificData?.[RoomId.EXAMINATION]}
+          // FIX: Cast initialData to ExaminationFormData to resolve type mismatch.
+          initialData={patient.roomSpecificData?.[RoomId.EXAMINATION] as ExaminationFormData}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
         />
       );
@@ -105,7 +110,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           patient={patient}
-          initialData={patient.roomSpecificData?.[RoomId.REPORT]}
+          // FIX: Cast initialData to ReportFormData to resolve type mismatch.
+          initialData={patient.roomSpecificData?.[RoomId.REPORT] as ReportFormData}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
           examConfigurations={examConfigurations}
           reportTemplates={reportTemplates}
@@ -118,7 +124,8 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           patient={patient}
-          initialData={patient.roomSpecificData?.[RoomId.RETRAIT_CR_SORTIE]}
+          // FIX: Cast initialData to RetraitCRSortieFormData to resolve type mismatch.
+          initialData={patient.roomSpecificData?.[RoomId.RETRAIT_CR_SORTIE] as RetraitCRSortieFormData}
           onSubmit={(data) => onSubmit(patient.id, room.id, data)}
         />
       );

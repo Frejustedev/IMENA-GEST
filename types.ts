@@ -15,7 +15,7 @@ export type Permission =
 export const ALL_PERMISSIONS: { id: Permission, label: string }[] = [
     { id: 'view_patients', label: 'Voir les patients' },
     { id: 'edit_patients', label: 'Modifier les patients' },
-    { id: 'create_patients', label: 'Créer des patients' },
+    { id: 'create_patients', label: 'Créer les patients' },
     { id: 'move_patients', label: 'Déplacer les patients' },
     { id: 'manage_appointments', label: 'Gérer les rendez-vous' },
     { id: 'manage_users', label: 'Gérer les utilisateurs' },
@@ -74,7 +74,7 @@ export interface ReferringEntity {
 
 export type PeriodOption = 'today' | 'thisWeek' | 'thisMonth';
 
-export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration' | 'exam_settings' | 'database' | 'report_templates_settings';
+export type ActiveView = 'room' | 'search' | 'daily_worklist' | 'patient_detail' | 'rooms_overview' | 'activity_feed' | 'statistics' | 'hot_lab' | 'administration' | 'exam_settings' | 'database' | 'report_templates_settings' | 'patrimony_dashboard' | 'patrimony_inventory' | 'patrimony_stock' | 'patrimony_stock_detail' | 'patrimony_asset_status';
 
 export type PaymentMethod = 'nonAssure' | 'assure' | 'priseEnCharge' | 'autres';
 
@@ -609,129 +609,93 @@ export interface ThyroidScintigraphyData {
     isPregnancyRisk?: boolean;
     hasExophthalmia?: boolean;
     hasAnteriorCervicalSwelling?: boolean;
-    hasLymphNodeStatus?: boolean; // Assuming this is a checkbox for presence
     otherClinicalInfo?: string;
   };
 
-  // Section Indication
+  // Section Anamnèse
   indication?: {
     isHyperthyroidism?: boolean;
     isHyperthyroidismNodule?: boolean;
     isBasedow?: boolean;
-    isBasedowNodule?: boolean;
-    isGMHN?: boolean; // Goitre Multi-Hétéro-Nodulaire
-    isNodule?: boolean;
-    isEctopic?: boolean;
-    isNeonatalHypothyroidism?: boolean;
-    isStromaOvarii?: boolean;
+    isAmiodarone?: boolean;
+    isNoduleDiscovery?: boolean;
+    isPreIratherapy?: boolean;
+    isPostThyroidectomy?: boolean;
+    isEctopyResearch?: boolean;
+    isLingualThyr?: boolean;
+    isInflammatory?: boolean;
+    isSubacuteThyroiditis?: boolean;
+    isGoiter?: boolean;
+    isMultiNodularGoiter?: boolean;
+    isToxicAdenoma?: boolean;
+    otherIndication?: string;
   };
 
-  // Section Cytologie-Anatomo-Pathologie
-  cytologyPathology?: string;
-
-  // Section Antécédents
   antecedents?: {
-    hasThyroiditis?: boolean;
+    hasIodineDeficiency?: boolean;
+    hasFamilialGoiter?: boolean;
     hasThyroidSurgery?: boolean;
     hasCervicalRadiotherapy?: boolean;
-    hasHereditaryThyroid?: boolean;
     biopsyCytopunction?: string;
+    otherAntecedents?: string;
   };
 
-  // Section Imagerie
-  imaging?: {
-    ultrasound?: string;
-    ctMri?: string;
-    scintigraphy?: string;
-  };
-
-  // Section Histoire de la maladie
-  illnessHistory?: {
-    duration?: string;
-    isHyperthyroidism?: boolean;
-    isHypothyroidism?: boolean;
-    isEuthyroidism?: boolean;
-    hasGoiter?: boolean;
-    hasNodule?: boolean;
-    hasADP?: boolean; // Adénopathie
-  };
-
-  // Section Laboratoire
+  // Section Biologie
   laboratory?: {
     tshus?: string;
     t3l?: string;
     t4l?: string;
-    tg?: string;
-    calcitonin?: string;
     acAntiTPO?: string;
-    acAntiTSH?: string;
-    acAntiTg?: string;
-    otherLabInfo?: string;
+    acAntiTG?: string;
+    acAntiRTSH?: string;
+    thyroglobulin?: string;
+  };
+  
+  // Section Traitement
+  treatment?: {
+    ongoingATS?: boolean;
+    ongoingHormone?: boolean;
+    ongoingIodine?: boolean;
+    dciOrCommercialName?: string;
+    dose?: string;
+    duration?: string;
+    stopDate?: string;
+    previousIratherapy?: string;
   };
 
-  // Section Injection (détails sur la fiche de consult)
+  // Section Imagerie
+  imaging?: {
+    echography?: string;
+    tdm?: string;
+    irm?: string;
+    otherImaging?: string;
+  };
+
+  // Section Technique et Synthèse
   injectionDetails?: {
     prescribedActivity?: string;
     injectedActivity?: string;
     injectionTime?: string;
-    technician?: string;
     injectionSite?: string;
   };
 
-  // Section Traitement
-  treatment?: {
-    // En cours
-    ongoingATS?: boolean;
-    ongoingHormone?: boolean;
-    ongoingIodine?: boolean;
-    ongoingContrast?: boolean;
-    ongoingDCIName?: string;
-    ongoingDuration?: string;
-    ongoingStopDate?: string;
-    ongoingWindowDuration?: string;
-    // Anterieur
-    previousIratherapy?: string;
-    previousOther?: string;
-  };
-  
-  // Section Echographie IMENA
-  imenaUltrasound?: {
-    examiner?: string;
-    details?: string;
-  };
-
-  // Section Acquisitions
   acquisitions?: {
     entryTime?: string;
     acquisitionTime?: string;
     exitTime?: string;
-    staticAnteriorClichés?: string;
-    staticProfileClichés?: string;
-    shotCount?: string; // Nombre de coups
-    spect?: string;
-  };
-
-  // Section Consultation Chaude
-  hotConsultation?: {
-    examiner?: string;
-    details?: string;
+    fixation2H?: string;
+    fixation24H?: string;
   };
   
-  // Section Analyse Contextuelle
   contextualAnalysis?: string;
-  
-  // Section Résultat-Conclusion-Recommandation
   conclusion?: string;
+
 }
 // --- END: Thyroid Scintigraphy Form Data Types ---
 
-export interface PatientDocument {
-  id: string;
-  name: string;
-  fileType: string;
-  uploadDate: string;
-  dataUrl: string; // base64 encoded file with MIME type
-}
+
+
+// =================== PATIENT & ROOM CORE TYPES ===================
 
 export interface Patient {
   id: string;
@@ -742,59 +706,69 @@ export interface Patient {
   phone?: string;
   email?: string;
   referringEntity?: ReferringEntity;
+  documents?: PatientDocument[];
+
   creationDate: string;
   currentRoomId: RoomId;
   statusInRoom: PatientStatusInRoom;
   history: PatientHistoryEntry[];
-  documents?: PatientDocument[];
-  roomSpecificData?: {
-    [RoomId.REQUEST]?: {
-      requestedExam?: string; // Changed from ScintigraphyExam
-      customFields?: { [fieldId: string]: any };
-    };
-    [RoomId.APPOINTMENT]?: {
-      dateRdv?: string;
-      heureRdv?: string;
-      consignesSpecifiques?: string;
-    };
-    [RoomId.CONSULTATION]?: {
-      resumeConsultation?: string;
-      decisionSuite?: string;
-      customFields?: { [fieldId: string]: any };
-      // START: Specialized Consultation Data (Legacy)
-      thyroidData?: ThyroidScintigraphyData;
-      boneData?: BoneScintigraphyData;
-      parathyroidData?: ParathyroidScintigraphyData;
-      renalDMSAData?: RenalDMSAScintigraphyData;
-      renalDTPAMAG3Data?: RenalDTPAMAG3ScintigraphyData;
-      // END: Specialized Consultation Data
-    };
-    [RoomId.INJECTION]?: {
-      produitInjecte?: string;
-      dose?: string;
-      heureInjection?: string;
-      voieAdministration?: string;
-    };
-    [RoomId.EXAMINATION]?: {
-      parametresExamen?: string;
-      commentairesTechnicien?: string;
-      qualiteImages?: 'Excellente' | 'Bonne' | 'Moyenne' | 'Médiocre' | '';
-    };
-    [RoomId.REPORT]?: {
-      texteCompteRendu?: string;
-      conclusionCr?: string;
-      customFields?: { [fieldId: string]: any };
-    };
-    [RoomId.RETRAIT_CR_SORTIE]?: {
-      dateRetrait?: string;
-      heureRetrait?: string;
-      retirePar?: string;
-      commentairesSortie?: string;
+
+  // Data specific to each room, collected from forms
+  roomSpecificData: {
+    [key in RoomId]?: {
+        [key: string]: any;
+        // Specific detailed forms data can be nested here
+        thyroidData?: ThyroidScintigraphyData;
+        boneData?: BoneScintigraphyData;
+        parathyroidData?: ParathyroidScintigraphyData;
+        renalDMSAData?: RenalDMSAScintigraphyData;
+        renalDTPAMAG3Data?: RenalDTPAMAG3ScintigraphyData;
     };
   };
 }
 
-// --- Specific Data types for Rooms ---
+export interface PatientDocument {
+    id: string;
+    name: string;
+    fileType: string;
+    uploadDate: string;
+    dataUrl: string; // Base64 encoded string for the file
+}
+
+export interface Room {
+  id: RoomId;
+  name: string;
+  description: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  allowedRoleIds: string[];
+  nextRoomId: RoomId | null;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  roleId: string;
+}
+
+export interface ReportTemplate {
+  id: string;
+  examName: ScintigraphyExam;
+  name: string;
+  reportContent: string;
+  conclusionContent: string;
+}
+
+// =================== HOT LAB TYPES ===================
+
+export interface RadiopharmaceuticalProduct {
+  id: string;
+  name: string;
+  isotope: string;
+  unit: 'MBq' | 'mCi' | 'GBq';
+}
+
 export interface TracerLot {
   id: string;
   productId: string;
@@ -811,20 +785,13 @@ export interface TracerLot {
 export interface PreparationLog {
   id: string;
   tracerLotId: string;
-  patientId?: string;
-  examType?: ScintigraphyExam;
   activityPrepared: number;
   unit: 'MBq' | 'mCi';
   preparationDateTime: string;
   preparedBy: string;
+  patientId?: string;
+  examType?: ScintigraphyExam;
   notes?: string;
-}
-
-export interface RadiopharmaceuticalProduct {
-  id: string;
-  name: string;
-  isotope: string;
-  unit: 'MBq' | 'mCi' | 'GBq';
 }
 
 export interface HotLabData {
@@ -833,40 +800,94 @@ export interface HotLabData {
   preparations: PreparationLog[];
 }
 
-
-export interface Room {
-  id: RoomId;
-  name: string;
-  description: string;
-  icon: React.FC<React.SVGProps<SVGSVGElement>>;
-  allowedRoleIds: string[];
-  nextRoomId: RoomId | null;
-}
-
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    passwordHash: string; // In a real app, this should be a hash.
-    roleId: string;
-}
-
-export type TimelineEventType = 'appointment' | 'injection' | 'examination';
+// =================== TIMELINE TYPES ===================
 
 export interface TimelineEvent {
     id: string;
-    time: string; // "HH:mm"
+    time: string; // "HH:MM"
     patient: Patient;
-    type: TimelineEventType;
+    type: 'appointment' | 'injection' | 'examination';
     description: string;
 }
 
-// --- START: Report Template Types ---
-export interface ReportTemplate {
+// =================== PATRIMONY TYPES ===================
+export interface Asset {
   id: string;
-  examName: ScintigraphyExam;
-  name: string;
-  reportContent: string;
-  conclusionContent: string;
+  family: string;
+  designation: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  quantity: number;
+  acquisitionYear: number;
+  acquisitionCost?: number;
+  isFunctional: boolean;
+  currentAction?: 'En service' | 'En réparation' | 'Réformé';
+  fundingSource?: string;
+  supplier?: string;
 }
-// --- END: Report Template Types ---
+
+export type StockMovementType = 'Entrée' | 'Sortie' | 'Consommation' | 'Inventaire';
+
+export interface StockMovement {
+  id: string;
+  date: string;
+  type: StockMovementType;
+  quantity: number;
+  unitPrice: number;
+  documentRef?: string; // N° Bon de commande/livraison
+  destinationOrSource?: string;
+  ordonnateur?: string; // For entries
+}
+
+export interface StockItem {
+  id: string;
+  designation: string;
+  unit: string;
+  budgetLine?: string;
+  currentStock: number;
+  unitPrice: number; // Last known unit price
+  movements: StockMovement[];
+}
+
+// --- START: Patrimony Life Sheet Types ---
+export interface LifeSheetMovementLot {
+  id: string;
+  date: string;
+  nature: string;
+  entryUnits?: number;
+  entryAmount?: number;
+  entryDestination?: string;
+  exitUnits?: number;
+  exitAmount?: number;
+  exitDestination?: string;
+}
+
+export interface LifeSheetLot {
+  id: string; // Corresponds to Asset ID
+  designation: string;
+  identificationCode: string; // e.g., Serial Number
+  lotValue: number;
+  unitValue: number;
+  movements: LifeSheetMovementLot[];
+}
+
+export interface LifeSheetMovementUnit {
+  id: string;
+  date: string;
+  nature: string;
+  entryAmount?: number;
+  entryState?: 'Bon' | 'Moyen' | 'Mauvais';
+  entryDestination?: string;
+  exitAmount?: number;
+  exitState?: 'Vendu' | 'Réformé' | 'Transféré';
+  exitDestination?: string;
+}
+
+export interface LifeSheetUnit {
+  id: string; // Corresponds to Asset ID
+  designation: string;
+  identificationCode: string;
+  movements: LifeSheetMovementUnit[];
+}
+// --- END: Patrimony Life Sheet Types ---
